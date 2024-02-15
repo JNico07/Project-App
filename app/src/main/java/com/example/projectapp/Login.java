@@ -19,6 +19,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Objects;
+
 public class Login extends AppCompatActivity {
 
     // Declare objects
@@ -27,19 +29,6 @@ public class Login extends AppCompatActivity {
     Button buttonLogin;
     ProgressBar progressBar;
     TextView textView;
-
-
-    // Check if user is already logged in, then it will open the Main Activity
-    @Override
-    public void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null){
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-            finish();
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,15 +81,23 @@ public class Login extends AppCompatActivity {
                             public void onComplete(@NonNull Task<AuthResult> task) {
                                 progressBar.setVisibility(View.GONE);
                                 if (task.isSuccessful()) {
-                                    // Sign in success, display a message to the user.
-                                    Toast.makeText(Login.this, "Login success.", Toast.LENGTH_SHORT).show();
-                                    // open the Main Activity
-                                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                                    startActivity(intent);
-                                    finish();
+                                    // check if user's Email is Verified
+                                    if (Objects.requireNonNull(mAuth.getCurrentUser()).isEmailVerified()) {
+                                        // Sign in success, display a message to the user.
+                                        Toast.makeText(Login.this, "Login success.", Toast.LENGTH_SHORT).show();
+                                        // open the Main Activity
+                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        startActivity(intent);
+                                        finish();
+                                    }
+                                    else {
+                                        Toast.makeText(Login.this, "Please verify your Email address", Toast.LENGTH_LONG).show();
+                                    }
+
+
                                 } else {
                                     // If sign in fails, display a message to the user.
-                                    Toast.makeText(Login.this, "Login failed.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(Login.this, "Login failed. Email or Password is incorrect", Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
@@ -108,4 +105,17 @@ public class Login extends AppCompatActivity {
         });
 
     }
+
+    // Check if user is already logged in, then it will open the Main Activity
+    @Override
+    public void onStart() {
+        super.onStart();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if(currentUser != null && currentUser.isEmailVerified()){
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+
 }

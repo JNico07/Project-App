@@ -19,6 +19,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import java.util.Objects;
+
 public class Register extends AppCompatActivity {
 
     // Declare objects
@@ -30,16 +32,16 @@ public class Register extends AppCompatActivity {
 
 
     // Check if user is already logged in, then it will open the Main Activity
-    @Override
-    public void onStart() {
-        super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if(currentUser != null){
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-            startActivity(intent);
-            finish();
-        }
-    }
+//    @Override
+//    public void onStart() {
+//        super.onStart();
+//        FirebaseUser currentUser = mAuth.getCurrentUser();
+//        if(currentUser != null){
+//            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+//            startActivity(intent);
+//            finish();
+//        }
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -92,15 +94,29 @@ public class Register extends AppCompatActivity {
                                 progressBar.setVisibility(View.GONE);
                                 // check if Successful
                                 if (task.isSuccessful()) {
-                                    // Sign in success, display a message to the user and update UI.
-                                    Toast.makeText(Register.this, "Account created.", Toast.LENGTH_SHORT).show();
-                                    // open the "Log in" activity and close the "Register" activity
-                                    Intent intent =  new Intent(getApplicationContext(), Login.class);
-                                    startActivity(intent);
-                                    finish();
+
+                                    // Verify EMAIL
+                                    Objects.requireNonNull(mAuth.getCurrentUser()).sendEmailVerification().addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                // Sign in success, display a message to the user and update UI.
+                                                Toast.makeText(Register.this, "User registered successfully. Please verify your email id", Toast.LENGTH_LONG).show();
+                                                // open the "Log in" activity and close the "Register" activity
+                                                Intent intent =  new Intent(getApplicationContext(), Login.class);
+                                                startActivity(intent);
+                                                finish();
+                                            } else {
+                                                Toast.makeText(Register.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+
+
                                 } else {
                                     // If sign in fails, display a message to the user and update UI.
-                                    Toast.makeText(Register.this, "Registration failed.", Toast.LENGTH_SHORT).show();
+//                                    Toast.makeText(Register.this, "Registration failed.", Toast.LENGTH_SHORT).show();
+                                    Toast.makeText(Register.this, Objects.requireNonNull(task.getException()).getMessage(), Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });

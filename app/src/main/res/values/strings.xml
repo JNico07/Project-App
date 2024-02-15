@@ -5,6 +5,8 @@
     <string name="password">Password</string>
     <string name="register">Register</string>
     <string name="click_to_login">Click to Login</string>
-    <string name="click_to_register">click to Register</string>
+    <string name="click_to_register">Click to Register</string>
     <string name="logout">logout</string>
+
+    <string name="client_id">740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com</string>
 </resources>

@@ -45,8 +45,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // to sign-out the user
                 FirebaseAuth.getInstance().signOut();
-                // open the "Log in" activity and close the "Main Activity"
-                Intent intent =  new Intent(getApplicationContext(), Login.class);
+                // open the "Welcome" activity and close the "Main Activity"
+                Intent intent =  new Intent(getApplicationContext(), Welcome.class);
                 startActivity(intent);
                 finish();
             }
