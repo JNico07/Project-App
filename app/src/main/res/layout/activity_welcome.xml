@@ -8,13 +8,15 @@
     android:padding="25dp"
     tools:context=".Welcome">
 
-    <com.google.android.material.imageview.ShapeableImageView
+    <ImageView
         android:id="@+id/appLogo"
         android:layout_width="150sp"
         android:layout_height="150sp"
         android:layout_marginTop="60sp"
         android:layout_gravity="center"
-        app:shapeAppearanceOverlay="@style/roundedImageView"/>
+        android:background="@drawable/logo"
+        app:shapeAppearanceOverlay="@style/roundedImageView"
+        android:contentDescription="App logo" />
 
     <TextView
         android:id="@+id/nameApp"
