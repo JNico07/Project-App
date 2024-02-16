@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -33,8 +34,8 @@ public class Welcome extends AppCompatActivity {
 
     FirebaseAuth auth;
     GoogleSignInClient googleSignInClient;
-
     Button emailSignin;
+    TextView googleSingin;
 
     // Logged in Result User Info
     private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), new ActivityResultCallback<ActivityResult>() {
@@ -82,8 +83,8 @@ public class Welcome extends AppCompatActivity {
 
         auth = FirebaseAuth.getInstance();
 
-        SignInButton signInButton = findViewById(R.id.signIn);
-        signInButton.setOnClickListener(new View.OnClickListener() {
+        googleSingin = findViewById(R.id.googleSingin);
+        googleSingin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 Intent intent = googleSignInClient.getSignInIntent();

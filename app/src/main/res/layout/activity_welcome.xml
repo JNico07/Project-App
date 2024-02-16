@@ -1,51 +1,113 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="25dp"
-    tools:context=".Welcome">
+    android:background="@color/app_theme"
+    tools:context=".temp">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.55" />
+
 
     <ImageView
         android:id="@+id/appLogo"
         android:layout_width="150sp"
         android:layout_height="150sp"
-        android:layout_marginTop="60sp"
         android:layout_gravity="center"
-        android:background="@drawable/logo"
-        app:shapeAppearanceOverlay="@style/roundedImageView"
-        android:contentDescription="App logo" />
+        android:layout_marginStart="130dp"
+        android:layout_marginTop="72dp"
+        android:layout_marginEnd="131dp"
+        android:layout_marginBottom="31dp"
+        android:background="@drawable/logo2"
+        android:contentDescription="App logo"
+        app:layout_constraintBottom_toTopOf="@+id/textView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shapeAppearanceOverlay="@style/roundedImageView" />
 
     <TextView
-        android:id="@+id/nameApp"
+        android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="200sp" />
-    <TextView
-        android:id="@+id/appLine"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="31dp"
+        android:layout_marginEnd="57dp"
+        android:layout_marginBottom="53dp"
+        android:fontFamily="sans-serif-medium"
+        android:gravity="center"
+        android:text="Empowering Parents, Balancing Screens: \nYour Child's Screen Time Tracker"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/cardView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/appLogo" />
 
-    <!-- Google Button -->
-    <com.google.android.gms.common.SignInButton
-        android:id="@+id/signIn"
-        android:layout_width="200sp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30sp"
-        android:layout_gravity="center"/>
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cardView"
+        style="@style/custom_card_view_style"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline"
+        app:layout_constraintVertical_bias="0.0"
+        tools:layout_editor_absoluteX="0dp">
 
-    <!-- Email  button -->
-    <Button
-        android:id="@+id/signInEmail"
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginTop="10sp"
-        android:background="@color/colorPrimary"
-        android:text="Sign In with Email"
-        android:textColor="#FFFFFF" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
 
-</LinearLayout>
+            <TextView
+                android:id="@+id/googleSingin"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@drawable/rectangle"
+                android:gravity="center"
+                android:text="Sign in with Google"
+                android:textSize="20sp"
+                app:layout_constraintBottom_toTopOf="@+id/signInEmail"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <Button
+                android:id="@+id/signInEmail"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:background="@drawable/roundstyle"
+                android:text="Sign In with Email"
+                android:textSize="20sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.501"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.689" />
+
+            <ImageView
+                android:id="@+id/googleLogo"
+                android:layout_width="41dp"
+                android:layout_height="35dp"
+                android:layout_marginTop="8dp"
+                app:layout_constraintBottom_toBottomOf="@+id/googleSingin"
+                app:layout_constraintEnd_toEndOf="@+id/googleSingin"
+                app:layout_constraintHorizontal_bias="0.11"
+                app:layout_constraintStart_toStartOf="@+id/googleSingin"
+                app:layout_constraintTop_toTopOf="@+id/googleSingin"
+                app:layout_constraintVertical_bias="0.0"
+                app:srcCompat="@drawable/fui_ic_googleg_color_24dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
