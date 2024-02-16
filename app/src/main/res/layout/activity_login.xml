@@ -10,6 +10,16 @@
     tools:context=".Login">
 
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingActionButton3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:layout_marginBottom="50dp"
+        android:clickable="true"
+        android:src="@drawable/baseline_arrow_back_ios_new_24"
+        android:focusable="true" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
