@@ -66,9 +66,9 @@
         android:layout_marginTop="100dp"/>
 
     <!-- Login link -->
-    <TextView
+    <Button
         android:id="@+id/loginNow"
-        android:text="@string/click_to_login"
+        android:text="@string/login"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
 
@@ -76,6 +76,6 @@
         android:textSize="20sp"
         android:gravity="center"
         android:layout_margin="20dp"
-        android:textColor="@color/bright_blue"/>
+        android:textColor="@color/white"/>
 
 </LinearLayout>

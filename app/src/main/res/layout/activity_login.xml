@@ -65,15 +65,15 @@
         android:textStyle="bold" />
 
     <!-- Register link -->
-    <TextView
+    <Button
         android:id="@+id/registerNow"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="20dp"
 
         android:gravity="center"
-        android:text="@string/click_to_register"
-        android:textColor="@color/bright_blue"
+        android:text="@string/register"
+        android:textColor="@color/white"
         android:textSize="20sp"
         android:textStyle="bold" />
 
