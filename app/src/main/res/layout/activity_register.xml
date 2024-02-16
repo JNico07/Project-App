@@ -76,6 +76,11 @@
         android:textSize="20sp"
         android:gravity="center"
         android:layout_margin="20dp"
-        android:textColor="@color/white"/>
+        android:textColor="@color/black"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="8dp"
+        app:rippleColor="#33AAAAAA"
+        app:strokeWidth="2dp"/>
+
 
 </LinearLayout>

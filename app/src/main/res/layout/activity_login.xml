@@ -73,8 +73,12 @@
 
         android:gravity="center"
         android:text="@string/register"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="20sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        app:backgroundTint="@android:color/transparent"
+        app:cornerRadius="8dp"
+        app:rippleColor="#33AAAAAA"
+        app:strokeWidth="2dp"/>
 
 </LinearLayout>
