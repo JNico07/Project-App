@@ -9,6 +9,7 @@
     android:padding="15dp"
     tools:context=".Register">
 
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
