@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Project App</string>
-    <string name="login">Login</string>
+    <string name="login">Log in</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="register">Register</string>
