@@ -7,25 +7,6 @@
     android:background="@color/app_theme"
     tools:context=".temp">
 
-<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-<!--        android:id="@+id/floatingActionButton3"-->
-<!--        android:layout_width="53dp"-->
-<!--        android:layout_height="52dp"-->
-<!--        android:layout_gravity="start"-->
-<!--        android:layout_marginStart="16dp"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        android:layout_marginEnd="62dp"-->
-<!--        android:layout_marginBottom="166dp"-->
-<!--        android:clickable="true"-->
-<!--        android:focusable="true"-->
-<!--        android:src="@drawable/baseline_arrow_back_ios_new_24"-->
-<!--        app:backgroundTint="@color/app_theme"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/cardView"-->
-<!--        app:layout_constraintEnd_toStartOf="@+id/appLogo"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        android:contentDescription="TODO" />-->
-
 <!--    <androidx.constraintlayout.widget.Guideline-->
 <!--        android:id="@+id/guideline"-->
 <!--        android:layout_width="wrap_content"-->
@@ -121,11 +102,11 @@
 <!--                app:layout_constraintTop_toTopOf="parent" />-->
 
 <!--            <Button-->
-<!--                android:id="@+id/btn_login"-->
+<!--                android:id="@+id/btn_register"-->
 <!--                android:layout_width="match_parent"-->
 <!--                android:layout_height="wrap_content"-->
 <!--                android:layout_marginTop="208dp"-->
-<!--                android:text="@string/login"-->
+<!--                android:text="@string/register"-->
 <!--                android:textSize="20sp"-->
 <!--                android:textStyle="bold"-->
 <!--                app:layout_constraintEnd_toEndOf="parent"-->
@@ -134,19 +115,19 @@
 <!--                app:layout_constraintTop_toTopOf="parent" />-->
 
 <!--            <TextView-->
-<!--                android:id="@+id/registerNow"-->
+<!--                android:id="@+id/loginNow"-->
 <!--                android:layout_width="0dp"-->
 <!--                android:layout_height="50dp"-->
 <!--                android:background="@drawable/button_border"-->
 <!--                android:gravity="center"-->
-<!--                android:text="Create new account"-->
+<!--                android:text="@string/login"-->
 <!--                android:textColor="@color/bright_blue"-->
-<!--                android:textSize="20sp"-->
+<!--                android:textSize="21sp"-->
 <!--                app:layout_constraintBottom_toBottomOf="parent"-->
 <!--                app:layout_constraintEnd_toEndOf="parent"-->
 <!--                app:layout_constraintHorizontal_bias="0.0"-->
 <!--                app:layout_constraintStart_toStartOf="parent"-->
-<!--                app:layout_constraintTop_toBottomOf="@+id/btn_login"-->
+<!--                app:layout_constraintTop_toBottomOf="@+id/btn_register"-->
 <!--                app:layout_constraintVertical_bias="0.786"-->
 <!--                android:clickable="true"-->
 <!--                android:focusable="true" />-->

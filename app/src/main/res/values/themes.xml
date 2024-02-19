@@ -21,4 +21,13 @@
         <item name="cornerSizeBottomRight">0dp</item>
     </style>
 
+    <style name="Base.Theme.ProjectApp.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Base.Theme.ProjectApp.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Base.Theme.ProjectApp.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
 </resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Project App</string>
+    <string name="app_name">GazeGuard</string>
     <string name="login">Log in</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
@@ -9,4 +9,16 @@
     <string name="logout">logout</string>
 
     <string name="client_id">740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com</string>
+    <string name="title_activity_parent_dashboard">Parent_Dashboard</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="menu_home">Home</string>
+    <string name="menu_gallery">Gallery</string>
+    <string name="menu_slideshow">Slideshow</string>
+    <string name="title_activity_measure_screentime">Measure_Screentime</string>
 </resources>

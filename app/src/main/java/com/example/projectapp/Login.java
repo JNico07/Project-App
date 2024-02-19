@@ -86,8 +86,8 @@ public class Login extends AppCompatActivity {
                                     if (Objects.requireNonNull(mAuth.getCurrentUser()).isEmailVerified()) {
                                         // Sign in success, display a message to the user.
                                         Toast.makeText(Login.this, "Login success.", Toast.LENGTH_SHORT).show();
-                                        // open the Main Activity
-                                        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                                        // open the "Choose" Activity
+                                        Intent intent = new Intent(getApplicationContext(), Choose.class);
                                         startActivity(intent);
                                         finish();
                                     }
@@ -116,13 +116,13 @@ public class Login extends AppCompatActivity {
 
     }
 
-    // Check if user is already logged in, then it will open the Main Activity
+    // Check if user is already logged in, then it will open the "Choose" Activity
     @Override
     public void onStart() {
         super.onStart();
         FirebaseUser currentUser = mAuth.getCurrentUser();
         if(currentUser != null && currentUser.isEmailVerified()){
-            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            Intent intent = new Intent(getApplicationContext(), Choose.class);
             startActivity(intent);
             finish();
         }
