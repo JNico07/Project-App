@@ -71,7 +71,7 @@
                 android:id="@+id/googleSingin"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
-                android:background="@drawable/rectangle"
+                android:background="@drawable/google_button_border"
                 android:gravity="center"
                 android:text="Sign in with Google"
                 android:textSize="20sp"

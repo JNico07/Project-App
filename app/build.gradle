@@ -1,42 +1,79 @@
-plugins {
-    id 'com.android.application'
-    id 'com.google.gms.google-services'
-}
+apply plugin: 'com.android.application'
+apply plugin: 'de.undercouch.download'
+apply plugin: 'com.google.gms.google-services'
 
 android {
-    namespace 'com.example.projectapp'
+    namespace 'org.tensorflow.lite.examples.detection'
     compileSdk 34
-
     defaultConfig {
-        applicationId "com.example.projectapp"
-        minSdk 21
-        targetSdk 34
+        applicationId "org.tensorflow.lite.examples.detection"
+        minSdkVersion 21
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
 
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
     }
-
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility = '1.8'
+        targetCompatibility = '1.8'
     }
-    buildFeatures {
-        viewBinding true
+    androidResources {
+        noCompress 'tflite'
+    }
+    lint {
+        abortOnError false
     }
 }
 
+// import DownloadModels task
+project.ext.ASSET_DIR = projectDir.toString() + '/src/main/assets'
+project.ext.TMP_DIR = project.buildDir.toString() + '/downloads'
+
+// Download default models; if you wish to use your own models then
+// place them in the "assets" directory and comment out this line.
+//apply from: "download_model.gradle"
+
+//apply from: 'download_model.gradle'
+
 dependencies {
+//    implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+//    implementation files('bin/gdbserver')
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.coordinatorlayout:coordinatorlayout:1.2.0'
+//    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'org.tensorflow:tensorflow-lite:2.4.0'
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.9.0'
+//    implementation 'org.tensorflow:tensorflow-lite-select-tf-ops:2.3.0'
+//    implementation 'org.tensorflow:tensorflow-lite:2.2.0'
+//    implementation 'org.tensorflow:tensorflow-lite-gpu:2.2.0'
+//    implementation 'org.tensorflow:tensorflow-lite:1.14.0'
+//    implementation(name:'tensorflow-lite', ext:'aar')
+//    implementation(name:'tensorflow-lite-gpu', ext:'aar')
+
+//    implementation 'org.tensorflow:tensorflow-lite-gpu:1.14.0'
+//    implementation 'org.tensorflow:tensorflow-lite:0.0.0-gpu-experimental'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.code.gson:gson:2.10'
+//    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.google.truth:truth:1.0.1'
 
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation 'com.google.firebase:firebase-auth:22.3.1'
     implementation 'com.google.firebase:firebase-core:21.1.1'
@@ -48,10 +85,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
     implementation 'androidx.navigation:navigation-fragment:2.7.7'
     implementation 'androidx.navigation:navigation-ui:2.7.7'
-
-    testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
     implementation 'com.github.bumptech.glide:glide:4.16.0'
     implementation 'com.google.android.gms:play-services-auth:21.0.0'
