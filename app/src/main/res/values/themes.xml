@@ -3,7 +3,7 @@
     <style name="Base.Theme.ProjectApp" parent="Theme.Material3.Light.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-        <item name="colorPrimary">@color/bright_blue</item>
+        <item name="colorPrimary">@color/app_theme</item>
     </style>
 
     <style name="Theme.ProjectApp" parent="Base.Theme.ProjectApp" />
