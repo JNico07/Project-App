@@ -12,7 +12,20 @@
           "package_name": "com.example.projectapp"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "740454054560-gfucbc0oc57te8sp7lrnfp11lblsprcp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.projectapp",
+            "certificate_hash": "26861d279ce86d0c3b7f54b51a35cf5cf48fed55"
+          }
+        },
+        {
+          "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAfryIBDetyhD869ORLzlr-vCnwV01-8dc"
@@ -20,7 +33,70 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740454054560:android:f7f48fa019d4825167e7c5",
+        "android_client_info": {
+          "package_name": "com.example.stopwatch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfryIBDetyhD869ORLzlr-vCnwV01-8dc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:740454054560:android:202cafc1bbb5f8ea67e7c5",
+        "android_client_info": {
+          "package_name": "org.tensorflow.lite.examples.detection"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAfryIBDetyhD869ORLzlr-vCnwV01-8dc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
