@@ -8,17 +8,45 @@
 
 
     <!-- Action Bar -->
+
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/backButtonParentDashboard"
+        android:layout_width="53dp"
+        android:layout_height="52dp"
+        android:layout_gravity="start"
+        android:layout_marginTop="4dp"
+        android:clickable="true"
+        android:contentDescription="TODO"
+        android:focusable="true"
+        android:src="@drawable/baseline_arrow_back_ios_new_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.005"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/app_theme"
-        app:title="Parent Dashboard"
-        app:titleTextColor="@android:color/white"
-        app:subtitleTextColor="@android:color/white"
+        app:layout_constraintTop_toTopOf="parent"
         app:popupTheme="@style/AppTheme.PopupOverlay"
-        app:layout_constraintTop_toTopOf="parent" />
-
+        app:subtitleTextColor="@android:color/white"
+        app:titleTextColor="@android:color/white"
+        tools:layout_editor_absoluteX="0dp" >
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Parent Dashboard"
+            android:textColor="@color/white"
+            android:textSize="30dp"
+            android:layout_gravity="end"/>
+        
+    </androidx.appcompat.widget.Toolbar>
 
     <androidx.cardview.widget.CardView
         android:layout_width="420dp"
