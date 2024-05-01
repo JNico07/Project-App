@@ -60,7 +60,7 @@ public class ParentDashbaord extends AppCompatActivity {
         // Initialize database reference to the ScreenTime node
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         screenTimeRef = FirebaseDatabase.getInstance().getReference()
-                .child("Registered Users").child(uid).child("ScreenTime");
+                .child("Registered Users").child(uid).child("Child").child("Child_1").child("ScreenTime");
 
         // Add ValueEventListener to retrieve the ScreenTime value
         screenTimeRef.addValueEventListener(new ValueEventListener() {
