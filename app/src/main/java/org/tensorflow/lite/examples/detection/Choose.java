@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 
+import org.tensorflow.lite.examples.detection.parentDB.ParentDashbaord;
+
 public class Choose extends AppCompatActivity {
 
     TextView parentDashboard, monitorMode;

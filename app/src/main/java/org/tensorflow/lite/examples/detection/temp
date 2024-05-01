@@ -44,17 +44,12 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
-
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import org.tensorflow.lite.examples.detection.customview.OverlayView;
 import org.tensorflow.lite.examples.detection.customview.OverlayView.DrawCallback;
@@ -130,14 +125,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     Button startButton;
     private boolean isPaused = true;
     private SharedPreferences sharedPreferences;
-    private String uid;
 
-    //    Dialog Box
+//    Dialog Box
     private Button btnExit;
     Dialog dialog;
     Button btnDialogConfirm, btnDialogExit;
     TextInputEditText editTextUserName;
-    String childNumber;
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -146,21 +139,22 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
+//        dialogBox();
+
         // Initialize your UI components
         timerText = findViewById(R.id.timerText);
         startButton = findViewById(R.id.start);
+
 
         // Firebase DB
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
         if (currentUser != null) {
-            uid = currentUser.getUid();
+            String uid = currentUser.getUid();
             mDatabase = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users").child(uid).child("Child").child("Child_1").child("ScreenTime");
         }
-
-        dialogBox();
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -183,7 +177,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
             }
         });
 
-
+        dialogBox();
 
     }
 
@@ -201,31 +195,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         editTextUserName = dialog.findViewById(R.id.userName);
 
         FirebaseUser currentUser = mAuth.getCurrentUser();
-        userNameDatabase = FirebaseDatabase.getInstance().getReference().child("Registered Users").child(uid).child("Child");
-
-        userNameDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                int childCount = (int) dataSnapshot.getChildrenCount();
-
-                childNumber = "Child_" + (childCount + 1);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
         btnDialogConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String userName = String.valueOf(editTextUserName.getText());
 
                 if (currentUser != null) {
-                    uid = currentUser.getUid();
+                    String uid = currentUser.getUid();
                     userNameDatabase = FirebaseDatabase.getInstance().getReference()
-                            .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
+                            .child("Registered Users").child(uid).child("Child").child("Child_1").child("name");
                     userNameDatabase.setValue(userName);
                 }
 

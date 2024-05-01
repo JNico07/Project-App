@@ -84,6 +84,7 @@ public class Welcome extends AppCompatActivity {
         auth = FirebaseAuth.getInstance();
 
         googleSingin = findViewById(R.id.googleSingin);
+        googleSingin.setEnabled(false);
         googleSingin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
