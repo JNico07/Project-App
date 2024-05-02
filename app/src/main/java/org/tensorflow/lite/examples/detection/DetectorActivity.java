@@ -34,7 +34,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.text.Layout;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
@@ -129,22 +128,27 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     Button startButton;
     private boolean isPaused = true;
-    private SharedPreferences sharedPreferences;
+    private SharedPreferences prefsTimer, prefsUserName;
     private String uid;
 
     //    Dialog Box
     private Button btnExit;
-    Dialog dialog;
-    Button btnDialogConfirm, btnDialogExit;
-    TextInputEditText editTextUserName;
-    String childNumber;
+    private Dialog dialog;
+    private Button btnDialogConfirm, btnDialogExit;
+    private TextInputEditText editTextUserName;
+    private String childNumber;
+    private boolean isUsernameSet = false;
+    private String savedUserName = "";
+    private static final String PREF_USERNAME_KEY = "username";
+    private static final String PREF_USERNAME_SET_KEY = "username_set";
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         LOGGER.d("onCreate " + this);
         super.onCreate(null);
 
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        prefsTimer = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Initialize your UI components
         timerText = findViewById(R.id.timerText);
@@ -160,7 +164,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     .child("Registered Users").child(uid).child("Child").child("Child_1").child("ScreenTime");
         }
 
-        dialogBox();
+        prefsUserName = PreferenceManager.getDefaultSharedPreferences(this);
+        isUsernameSet = prefsUserName.getBoolean(PREF_USERNAME_SET_KEY, false);
+        if (isUsernameSet) {
+            savedUserName = prefsUserName.getString(PREF_USERNAME_KEY, "");
+        } else {
+            showUsernameDialog();
+        }
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -187,7 +197,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     }
 
-    private void dialogBox() {
+    private void showUsernameDialog() {
+
         dialog = new Dialog(DetectorActivity.this);
         dialog.setContentView(R.layout.custom_dialog_box);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -223,10 +234,17 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 String userName = String.valueOf(editTextUserName.getText());
 
                 if (currentUser != null) {
+                    // save username on Database
                     uid = currentUser.getUid();
                     userNameDatabase = FirebaseDatabase.getInstance().getReference()
                             .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
                     userNameDatabase.setValue(userName);
+
+                    // save username Locally
+                    SharedPreferences.Editor editor = prefsUserName.edit();
+                    editor.putString(PREF_USERNAME_KEY, savedUserName);
+                    editor.putBoolean(PREF_USERNAME_SET_KEY, true);
+                    editor.apply();
                 }
 
                 dialog.dismiss();
@@ -245,7 +263,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     @Override
     public void onPause() {
         super.onPause();
-        SharedPreferences.Editor editor = sharedPreferences.edit();
+        SharedPreferences.Editor editor = prefsTimer.edit();
         editor.putInt("timerSeconds", timerSeconds);
         editor.apply();
     }
@@ -256,7 +274,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     public void onResume() {
         super.onResume();
         // Load the timer value, default is 0 if not found
-        timerSeconds = sharedPreferences.getInt("timerSeconds", 0);
+        timerSeconds = prefsTimer.getInt("timerSeconds", 0);
         updateTimerUI(); // Update UI with loaded timer value
     }
 
@@ -578,7 +596,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     // Which detection model to use: by default uses Tensorflow Object Detection API frozen
     // checkpoints.
     private enum DetectorMode {
-        TF_OD_API;
+        TF_OD_API
     }
 
     @Override
