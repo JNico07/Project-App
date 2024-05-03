@@ -149,6 +149,7 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         super.onCreate(null);
 
         prefsTimer = PreferenceManager.getDefaultSharedPreferences(this);
+        prefsUserName = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Initialize your UI components
         timerText = findViewById(R.id.timerText);
@@ -164,7 +165,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                     .child("Registered Users").child(uid).child("Child").child("Child_1").child("ScreenTime");
         }
 
-        prefsUserName = PreferenceManager.getDefaultSharedPreferences(this);
         isUsernameSet = prefsUserName.getBoolean(PREF_USERNAME_SET_KEY, false);
         if (isUsernameSet) {
             savedUserName = prefsUserName.getString(PREF_USERNAME_KEY, "");

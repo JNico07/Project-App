@@ -31,6 +31,10 @@
 
         <menu>
             <item
+                android:id="@+id/nav_back"
+                android:icon="@drawable/arrow_back_24"
+                android:title="Back"/>
+            <item
                 android:id="@+id/nav_logout"
                 android:icon="@drawable/nav_logout"
                 android:title="Logout"/>

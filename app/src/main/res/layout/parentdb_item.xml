@@ -7,10 +7,10 @@
     app:cardElevation="6dp"
     app:cardUseCompatPadding="true">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#808080" />
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:background="#808080" />-->
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -24,7 +24,7 @@
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:src="@drawable/person"
-            app:civ_border_color="#FF000000"
+            app:civ_border_color="#989898"
             app:civ_border_width="1dp" />
 
         <TextView
