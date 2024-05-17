@@ -24,6 +24,7 @@
     <color name="teal_700">#FF018786</color>
 
     <color name="app_theme">#009dff</color>
+    <color name="app_accent">#425066</color>
     <color name="app_theme_light">#f6fbff</color>
     <color name="edit_text_border">#f6fbff</color>
     <color name="edit_text_background">#f6fbff</color>

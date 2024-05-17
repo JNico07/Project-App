@@ -4,10 +4,15 @@
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
         <item name="colorPrimary">@color/app_theme</item>
+        <item name="android:textColorSecondary">@color/white</item>
+        <item name="actionBarWidgetTheme">@style/MyActionWidgetTheme</item>
     </style>
 
     <style name="Theme.ProjectApp" parent="Base.Theme.ProjectApp" />
 
+    <style name="MyActionWidgetTheme" parent="Widget.AppCompat.ActionButton.Overflow">
+        <item name="android:textColor">#EC0000</item>
+    </style>
 
     <style name="custom_card_view_style" parent="Widget.MaterialComponents.CardView">
         <item name="shapeAppearanceOverlay">@style/custom_card_view</item>

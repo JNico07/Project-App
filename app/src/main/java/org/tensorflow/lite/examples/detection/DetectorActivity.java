@@ -37,6 +37,8 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.util.Size;
 import android.util.TypedValue;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -44,6 +46,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.textfield.TextInputEditText;
@@ -183,16 +186,15 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         });
 
 
-        FloatingActionButton fab = findViewById(R.id.backButtonMonitoringMode);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), Choose.class);
-                startActivity(intent);
-//                finish();
-            }
-        });
-
+//        FloatingActionButton fab = findViewById(R.id.backButtonMonitoringMode);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(getApplicationContext(), Choose.class);
+//                startActivity(intent);
+////                finish();
+//            }
+//        });
 
 
     }
@@ -557,8 +559,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                                         showFrameInfo(previewWidth + "x" + previewHeight);
                                         showCropInfo(cropCopyBitmap.getWidth() + "x" + cropCopyBitmap.getHeight());
                                         showInference(lastProcessingTimeMs + "ms");
-
-
 
                                         // Keep running the processing loop
                                         handler.postDelayed(new Runnable() {

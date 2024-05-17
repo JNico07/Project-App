@@ -19,6 +19,7 @@ package org.tensorflow.lite.examples.detection;
 import android.Manifest;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.hardware.Camera;
@@ -44,6 +45,8 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import android.util.Log;
 import android.util.Size;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.view.ViewTreeObserver;
@@ -124,8 +127,6 @@ public abstract class CameraActivity extends AppCompatActivity
 //  boolean isLooking = DetectorActivity.isLookingDetected;
 
   ArrayList<String> deviceStrings = new ArrayList<String>();
-
-  Button onOffButton;
   private boolean containerVisible = false;
   private FrameLayout container;
   private RelativeLayout cameraRelativeLayout;
@@ -142,7 +143,7 @@ public abstract class CameraActivity extends AppCompatActivity
     timerText = findViewById(R.id.timerText);
     Toolbar toolbar = findViewById(R.id.toolbar);
     setSupportActionBar(toolbar);
-    getSupportActionBar().setDisplayShowTitleEnabled(false);
+//    getSupportActionBar().setDisplayShowTitleEnabled(true);
 
     cameraRelativeLayout = findViewById(R.id.CameraRelativeLayout);
     container = findViewById(R.id.container);
@@ -153,9 +154,6 @@ public abstract class CameraActivity extends AppCompatActivity
         cameraRelativeLayout.setVisibility(View.INVISIBLE);
       }
     }, 200);
-
-    onOffButton = findViewById(R.id.on_off);
-    onOffButton.setOnClickListener(this);
 
     if (hasPermission()) {
       setFragment();
@@ -264,6 +262,44 @@ public abstract class CameraActivity extends AppCompatActivity
 
   }
 
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+    return true;
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+    int id = item.getItemId();
+    if (id == R.id.show_ET_cam) {
+      Toast.makeText(this, "Camera Display", Toast.LENGTH_SHORT).show();
+
+      // Toggle VISIBILITY of container
+      containerVisible = !containerVisible;
+      int visibility = containerVisible ? View.VISIBLE : View.INVISIBLE;
+      container.setVisibility(visibility);
+      cameraRelativeLayout.setVisibility(visibility);
+
+      // Set layout gravity of timerText based on container visibility
+      CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) timerText.getLayoutParams();
+      if (params != null) {
+        if (containerVisible) {
+          params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
+        } else {
+          params.gravity = Gravity.CENTER;
+        }
+        timerText.setLayoutParams(params);
+      } else {
+        Log.e("CameraActivity", "TimerText layout params are null");
+      }
+    }
+    if (id == R.id.back) {
+      Toast.makeText(this, "Going back...", Toast.LENGTH_SHORT).show();
+      Intent intent = new Intent(getApplicationContext(), Choose.class);
+      startActivity(intent);
+    }
+    return true;
+  }
 
   protected ArrayList<String> getModelStrings(AssetManager mgr, String path){
     ArrayList<String> res = new ArrayList<String>();
@@ -629,26 +665,6 @@ public abstract class CameraActivity extends AppCompatActivity
       setNumThreads(numThreads);
     }
 
-    // Toggle VISIBILITY of container
-    if (v.getId() == R.id.on_off) {
-      containerVisible = !containerVisible;
-      int visibility = containerVisible ? View.VISIBLE : View.INVISIBLE;
-      container.setVisibility(visibility);
-      cameraRelativeLayout.setVisibility(visibility);
-
-      // Set layout gravity of timerText based on container visibility
-      CoordinatorLayout.LayoutParams params = (CoordinatorLayout.LayoutParams) timerText.getLayoutParams();
-      if (params != null) {
-        if (containerVisible) {
-          params.gravity = Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL;
-        } else {
-          params.gravity = Gravity.CENTER;
-        }
-        timerText.setLayoutParams(params);
-      } else {
-        Log.e("CameraActivity", "TimerText layout params are null");
-      }
-    }
   }
 
   protected void showFrameInfo(String frameInfo) {

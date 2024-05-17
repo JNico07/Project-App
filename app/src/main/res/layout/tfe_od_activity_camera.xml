@@ -21,75 +21,87 @@
     android:layout_height="match_parent"
     android:background="#00000000">
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/backButtonMonitoringMode"
-        android:layout_width="53dp"
-        android:layout_height="52dp"
-        android:layout_gravity="start"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="62dp"
-        android:layout_marginBottom="166dp"
-        android:clickable="true"
-        android:contentDescription="TODO"
-        android:focusable="true"
-        android:src="@drawable/baseline_arrow_back_ios_new_24" />
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/app_theme"
+        app:popupTheme="@style/Base.Theme.ProjectApp"
+        app:title="Measure Screen Time"
+        app:titleTextColor="@color/white"
+        android:theme="@style/Theme.ProjectApp"/>
 
     <RelativeLayout
         android:id="@+id/CameraRelativeLayout"
         android:layout_width="match_parent"
-        android:layout_height="545dp"
-        android:background="@android:color/black"
-        android:orientation="vertical">
-
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:layout_marginBottom="?attr/actionBarSize">
 
         <!--            android:visibility="invisible"-->
 
-        <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:layout_alignParentTop="true"
-            android:background="@color/tfe_semi_transparent"
-            android:visibility="invisible">
+<!--        <androidx.appcompat.widget.Toolbar-->
+<!--            android:id="@+id/toolbar"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="?attr/actionBarSize"-->
+<!--            android:layout_alignParentTop="true"-->
+<!--            android:background="@color/tfe_semi_transparent"-->
+<!--            android:visibility="invisible">-->
 
-            <!--            <ImageView-->
-            <!--                android:layout_width="wrap_content"-->
-            <!--                android:layout_height="wrap_content"-->
-            <!--                android:src="@drawable/tfl2_logo" />-->
-        </androidx.appcompat.widget.Toolbar>
+<!--                        <ImageView-->
+<!--                            android:layout_width="wrap_content"-->
+<!--                            android:layout_height="wrap_content"-->
+<!--                            android:src="@drawable/tfl2_logo" />-->
+<!--        </androidx.appcompat.widget.Toolbar>-->
+
+<!--        <com.google.android.material.floatingactionbutton.FloatingActionButton-->
+<!--            android:id="@+id/backButtonMonitoringMode"-->
+<!--            android:layout_width="53dp"-->
+<!--            android:layout_height="52dp"-->
+<!--            android:layout_gravity="start"-->
+<!--            android:layout_marginStart="16dp"-->
+<!--            android:layout_marginTop="16dp"-->
+<!--            android:layout_marginEnd="62dp"-->
+<!--            android:layout_marginBottom="166dp"-->
+<!--            android:clickable="true"-->
+<!--            android:contentDescription="TODO"-->
+<!--            android:focusable="true"-->
+<!--            android:src="@drawable/baseline_arrow_back_ios_new_24"-->
+<!--            android:visibility="invisible"/>-->
 
     </RelativeLayout>
 
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/on_off"
-        android:text="on/off"
-        android:layout_gravity="start|bottom"
-        android:layout_margin="15dp"/>
+<!--    <Button-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:id="@+id/on_off"-->
+<!--        android:text="on/off"-->
+<!--        android:layout_gravity="start|bottom"-->
+<!--        android:layout_margin="15dp"/>-->
+
+    <TextView
+        android:id="@+id/timerText"
+        android:layout_width="364dp"
+        android:layout_height="113dp"
+        android:layout_gravity="center|center_horizontal"
+        android:layout_marginBottom="60dp"
+        android:background="@drawable/bg"
+        android:paddingTop="10dp"
+        android:text="00:00:00"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="70sp" />
 
     <Button
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/start"
         android:text="start"
-        android:layout_gravity="end|bottom"
+        android:layout_gravity="center|bottom"
         android:layout_margin="15dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/timerText"
-        android:text="00:00:00"
-        android:textAlignment="center"
-        android:layout_gravity="center|center_horizontal"
-        android:textSize="70sp"
-        android:layout_marginBottom="60dp"
-        android:background="@drawable/bg"
-        android:textColor="@color/black"
-        android:paddingTop="30dp"/>
 
     <include
         android:id="@+id/bottom_sheet_layout"
@@ -100,7 +112,9 @@
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         app:layout_anchor="@+id/CameraRelativeLayout"
         app:layout_anchorGravity="center"
         tools:context="org.tensorflow.demo.CameraActivity" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
