@@ -127,23 +127,12 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
-    private DatabaseReference userNameDatabase;
 
     Button startButton;
     private boolean isPaused = true;
-    private SharedPreferences prefsTimer, prefsUserName;
+    private SharedPreferences prefsTimer;
     private String uid;
-
-    //    Dialog Box
-    private Button btnExit;
-    private Dialog dialog;
-    private Button btnDialogConfirm, btnDialogExit;
-    private TextInputEditText editTextUserName;
-    private String childNumber;
-    private boolean isUsernameSet = false;
-    private String savedUserName = "";
-    private static final String PREF_USERNAME_KEY = "username";
-    private static final String PREF_USERNAME_SET_KEY = "username_set";
+    Choose choose = new Choose();
 
 
     @Override
@@ -152,7 +141,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         super.onCreate(null);
 
         prefsTimer = PreferenceManager.getDefaultSharedPreferences(this);
-        prefsUserName = PreferenceManager.getDefaultSharedPreferences(this);
 
         // Initialize your UI components
         timerText = findViewById(R.id.timerText);
@@ -162,17 +150,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser currentUser = mAuth.getCurrentUser();
 
+        // Retrieve the childNumber using the utility class
+        String childNumber = SharedPrefsUtil.getChildNumber(this);
+
         if (currentUser != null) {
             uid = currentUser.getUid();
             mDatabase = FirebaseDatabase.getInstance().getReference()
-                    .child("Registered Users").child(uid).child("Child").child("Child_1").child("ScreenTime");
-        }
-
-        isUsernameSet = prefsUserName.getBoolean(PREF_USERNAME_SET_KEY, false);
-        if (isUsernameSet) {
-            savedUserName = prefsUserName.getString(PREF_USERNAME_KEY, "");
-        } else {
-            showUsernameDialog();
+                    .child("Registered Users").child(uid).child("Child").child(childNumber).child("ScreenTime");
         }
 
         startButton.setOnClickListener(new View.OnClickListener() {
@@ -186,80 +170,6 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         });
 
 
-//        FloatingActionButton fab = findViewById(R.id.backButtonMonitoringMode);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Intent intent = new Intent(getApplicationContext(), Choose.class);
-//                startActivity(intent);
-////                finish();
-//            }
-//        });
-
-
-    }
-
-    private void showUsernameDialog() {
-
-        dialog = new Dialog(DetectorActivity.this);
-        dialog.setContentView(R.layout.custom_dialog_box);
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.custom_dialog_bg));
-        dialog.setCancelable(false);
-
-        dialog.show();
-
-        btnDialogExit = dialog.findViewById(R.id.btnDialogExit);
-        btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
-        editTextUserName = dialog.findViewById(R.id.userName);
-
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        userNameDatabase = FirebaseDatabase.getInstance().getReference().child("Registered Users").child(uid).child("Child");
-
-        userNameDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                int childCount = (int) dataSnapshot.getChildrenCount();
-
-                childNumber = "Child_" + (childCount + 1);
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-
-            }
-        });
-
-        btnDialogConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String userName = String.valueOf(editTextUserName.getText());
-
-                if (currentUser != null) {
-                    // save username on Database
-                    uid = currentUser.getUid();
-                    userNameDatabase = FirebaseDatabase.getInstance().getReference()
-                            .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
-                    userNameDatabase.setValue(userName);
-
-                    // save username Locally
-                    SharedPreferences.Editor editor = prefsUserName.edit();
-                    editor.putString(PREF_USERNAME_KEY, savedUserName);
-                    editor.putBoolean(PREF_USERNAME_SET_KEY, true);
-                    editor.apply();
-                }
-
-                dialog.dismiss();
-            }
-        });
-        btnDialogExit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), Choose.class);
-                startActivity(intent);
-                dialog.dismiss();
-            }
-        });
     }
 
     @Override
