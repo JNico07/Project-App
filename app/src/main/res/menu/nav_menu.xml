@@ -16,9 +16,9 @@
             android:icon="@drawable/nav_setting"
             android:title="Settings"/>
         <item
-            android:id="@+id/nav_share"
-            android:icon="@drawable/nav_share"
-            android:title="share"/>
+            android:id="@+id/nav_limits_alerts"
+            android:icon="@drawable/nav_alertlmt"
+            android:title="Limits &amp; Alerts"/>
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/nav_about"

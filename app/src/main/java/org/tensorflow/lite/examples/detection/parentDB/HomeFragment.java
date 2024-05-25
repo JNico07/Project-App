@@ -3,6 +3,7 @@ package org.tensorflow.lite.examples.detection.parentDB;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -10,36 +11,43 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import org.tensorflow.lite.examples.detection.Login;
 import org.tensorflow.lite.examples.detection.R;
-import org.tensorflow.lite.examples.detection.Welcome;
 
 public class HomeFragment extends Fragment {
 
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
-    private TextView textView;
+    private TextView parentNameTextView;
     private RecyclerView recyclerView;
     ParentAdapter parentAdapter;
     private String uid;
+
+    private TextView textView;
+    private FirebaseUser user;
+    private DatabaseReference parentNameRef;
+    private String parentName;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_home, container, false);
+        View fragmentHomeView = inflater.inflate(R.layout.fragment_home, container, false);
 
-        textView = view.findViewById(R.id.user_details);
-        recyclerView = view.findViewById(R.id.rv);
+        parentNameTextView = fragmentHomeView.findViewById(R.id.parentName);
+        recyclerView = fragmentHomeView.findViewById(R.id.rv);
 
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
@@ -47,7 +55,12 @@ public class HomeFragment extends Fragment {
             Intent intent = new Intent(getContext(), Login.class);
             startActivity(intent);
         } else {
-            textView.setText(currentUser.getEmail());
+            getParentName(new ParentNameCallback() {
+                @Override
+                public void onCallback(String parentName) {
+                    parentNameTextView.setText(parentName);
+                }
+            });
         }
 
         uid = currentUser.getUid();
@@ -61,10 +74,34 @@ public class HomeFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
 
-        return view;
+        return fragmentHomeView;
     }
 
-        @Override
+    private void getParentName(final ParentNameCallback callback) {
+        String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        parentNameRef = FirebaseDatabase.getInstance().getReference()
+                .child("Registered Users").child(uid).child("Parent").child("full_name");
+
+        parentNameRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    String parentName = dataSnapshot.getValue(String.class);
+                    callback.onCallback(parentName);
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                // Handle possible errors.
+            }
+        });
+    }
+    public interface ParentNameCallback {
+        void onCallback(String parentName);
+    }
+
+    @Override
     public void onStart() {
         super.onStart();
         parentAdapter.startListening();

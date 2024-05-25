@@ -35,7 +35,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.SystemClock;
 import android.os.Trace;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -53,9 +52,6 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.Chronometer;
-import android.widget.CompoundButton;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -63,7 +59,6 @@ import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 
@@ -73,7 +68,6 @@ import java.util.ArrayList;
 
 import org.tensorflow.lite.examples.detection.env.ImageUtils;
 import org.tensorflow.lite.examples.detection.env.Logger;
-import org.tensorflow.lite.examples.detection.tflite.YoloV5Classifier;
 
 
 public abstract class CameraActivity extends AppCompatActivity
@@ -545,7 +539,7 @@ public abstract class CameraActivity extends AppCompatActivity
     return requiredLevel <= deviceLevel;
   }
 
-  private String chooseCamera() {
+  private String chooseFrontCamera() {
     final CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
     try {
       for (final String cameraId : manager.getCameraIdList()) {
@@ -572,7 +566,7 @@ public abstract class CameraActivity extends AppCompatActivity
   }
 
   protected void setFragment() {
-    String cameraId = chooseCamera();
+    String cameraId = chooseFrontCamera();
 
     Fragment fragment;
     if (useCamera2API) {
@@ -591,6 +585,10 @@ public abstract class CameraActivity extends AppCompatActivity
                       getDesiredPreviewFrameSize());
 
       camera2Fragment.setCamera(cameraId);
+
+      Intent cameraIntnet = new Intent();
+      updateIntentForCameraFacing(cameraIntnet, true);
+
       fragment = camera2Fragment;
     } else {
       fragment =
@@ -599,6 +597,30 @@ public abstract class CameraActivity extends AppCompatActivity
 
     getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
 
+  }
+
+  public void updateIntentForCameraFacing(Intent cameraIntent, boolean frontFacing) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+      if (frontFacing) {
+        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_BACK);
+      } else {
+        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
+      }
+    } else if (frontFacing) {
+      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_BACK);
+      cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
+
+      // Samsung
+      cameraIntent.putExtra("camerafacing", "front");
+      cameraIntent.putExtra("previous_mode", "front");
+    } else {
+      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
+      cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", false);
+
+      // Samsung
+      cameraIntent.putExtra("camerafacing", "rear");
+      cameraIntent.putExtra("previous_mode", "rear");
+    }
   }
 
 

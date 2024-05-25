@@ -18,14 +18,14 @@
         android:orientation="vertical">
 
         <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:id="@+id/toolbar"
-            android:elevation="4dp"
             android:background="@color/app_theme"
-            android:theme="@style/AppTheme.ObjectDetection"
+            android:elevation="4dp"
             android:popupTheme="@style/AppTheme.PopupOverlay"
-            app:titleTextColor="@color/white"/>
+            android:theme="@style/AppTheme.ObjectDetection"
+            app:titleTextColor="@color/white" />
 
         <FrameLayout
             android:id="@+id/fragment_container"
