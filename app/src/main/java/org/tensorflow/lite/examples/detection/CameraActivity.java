@@ -599,15 +599,15 @@ public abstract class CameraActivity extends AppCompatActivity
 
   }
 
-  public void updateIntentForCameraFacing(Intent cameraIntent, boolean frontFacing) {
+  public void updateIntentForCameraFacing(Intent cameraIntent, boolean backFacing) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-      if (frontFacing) {
-        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_BACK);
+      if (backFacing) {
+        cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
       } else {
         cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
       }
-    } else if (frontFacing) {
-      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_BACK);
+    } else if (backFacing) {
+      cameraIntent.putExtra("android.intent.extras.CAMERA_FACING", CameraCharacteristics.LENS_FACING_FRONT);
       cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", true);
 
       // Samsung
@@ -618,8 +618,8 @@ public abstract class CameraActivity extends AppCompatActivity
       cameraIntent.putExtra("android.intent.extra.USE_FRONT_CAMERA", false);
 
       // Samsung
-      cameraIntent.putExtra("camerafacing", "rear");
-      cameraIntent.putExtra("previous_mode", "rear");
+      cameraIntent.putExtra("camerafacing", "front");
+      cameraIntent.putExtra("previous_mode", "front");
     }
   }
 
