@@ -32,7 +32,8 @@ public class DetectorService extends Service {
 
 
     private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean isRunning = false;
+    public static boolean isRunning = false;
+    private boolean isPause = false;
     private int timerSeconds = 0;
     final Runnable runnable = new Runnable() {
         @Override
@@ -53,7 +54,7 @@ public class DetectorService extends Service {
     public void onCreate() {
         super.onCreate();
         context = this;
-        startForeground(NOTIFICATION_ID, showNotification("this is content."));
+        startForeground(NOTIFICATION_ID, showNotification("00:00:00"));
     }
 
     @Nullable
@@ -64,13 +65,39 @@ public class DetectorService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Toast.makeText(context, "Time: ", Toast.LENGTH_SHORT).show();
-        doTask();
-        return super.onStartCommand(intent, flags, startId);
+//        Toast.makeText(context, "Time: ", Toast.LENGTH_SHORT).show();
+
+        if (intent != null) {
+            String action = intent.getAction();
+            if ("START_TIMER".equals(action)) {
+                startTimer();
+            } else if ("PAUSE_TIMER".equals(action)) {
+                pauseTimer();
+            }
+        }
+
+        return START_STICKY;
     }
 
-    private void doTask() {
-        detector();
+    private void startTimer() {
+        if (!isRunning) {
+            isRunning = true;
+            isPause = true;
+            handler.postDelayed(runnable, 1000);
+            Toast.makeText(context, "Timer started", Toast.LENGTH_SHORT).show();
+        }
+        else {
+            isPause = false;
+            Toast.makeText(context, "Timer resumed", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void pauseTimer() {
+        if (isRunning && isPause) {
+            handler.removeCallbacks(runnable);
+            isRunning = false;
+            Toast.makeText(context, "Timer paused", Toast.LENGTH_SHORT).show();
+
+        }
     }
 
     private void updateNotification(String data) {
@@ -88,15 +115,13 @@ public class DetectorService extends Service {
             );
         }
 
-        Notification notification = new NotificationCompat.Builder(context, CHANNEL_ID)
+        return new NotificationCompat.Builder(context, CHANNEL_ID)
                 .setContentTitle("Foreground Service")
                 .setContentText(content)
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .build();
-
-        return notification;
     }
 
     @Override
@@ -105,8 +130,6 @@ public class DetectorService extends Service {
         isDestroyed = true;
         Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
     }
-
-
 
     private void detector() {
 

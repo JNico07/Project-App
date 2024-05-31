@@ -134,6 +134,8 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
     private String uid;
     Choose choose = new Choose();
 
+    private boolean isDetectorServiceRunning = false;
+
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -162,14 +164,21 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                // to pause/unpause eye tracking
                 isPaused = !isPaused;
 
+                // Start or pause the foreground service
                 Intent intent = new Intent(getApplicationContext(), DetectorService.class);
+                if (DetectorService.isRunning) {
+                    // Pause the timer
+                    intent.setAction("PAUSE_TIMER");
+                } else {
+                    // Start the timer
+                    intent.setAction("START_TIMER");
+                }
                 startService(intent);
             }
         });
-
-
     }
 
     @Override
