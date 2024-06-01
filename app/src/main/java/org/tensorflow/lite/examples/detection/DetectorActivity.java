@@ -19,6 +19,7 @@ package org.tensorflow.lite.examples.detection;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.Config;
 import android.graphics.Canvas;
@@ -172,9 +173,13 @@ public class DetectorActivity extends CameraActivity implements OnImageAvailable
                 if (DetectorService.isRunning) {
                     // Pause the timer
                     intent.setAction("PAUSE_TIMER");
+                    startButton.setText("PAUSED");
+                    startButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.gray)));
                 } else {
                     // Start the timer
                     intent.setAction("START_TIMER");
+                    startButton.setText("START");
+                    startButton.setBackgroundTintList(ColorStateList.valueOf(getResources().getColor(R.color.bright_blue)));
                 }
                 startService(intent);
             }
