@@ -76,6 +76,16 @@
             android:foregroundServiceType="camera|dataSync" >
         </service>
 
+        <receiver
+            android:name=".receivers.TimerBroadcastReceiver"
+            android:exported="true"
+            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

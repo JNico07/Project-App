@@ -7,6 +7,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -28,6 +30,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.GoogleAuthProvider;
 import com.google.firebase.database.FirebaseDatabase;
+
+import org.tensorflow.lite.examples.detection.services.TimerService;
 
 import java.util.Objects;
 
@@ -106,6 +110,22 @@ public class Welcome extends AppCompatActivity {
             }
         });
 
+
+
+//        foregroundServiceRunning();
+    }
+
+
+    public boolean foregroundServiceRunning() {
+
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+
+        for (ActivityManager.RunningServiceInfo service : activityManager.getRunningServices(Integer.MAX_VALUE)) {
+            if (TimerService.class.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return true;
     }
 }
 
