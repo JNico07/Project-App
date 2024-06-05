@@ -112,7 +112,7 @@ public class Welcome extends AppCompatActivity {
 
 
 
-//        foregroundServiceRunning();
+        foregroundServiceRunning();
     }
 
 

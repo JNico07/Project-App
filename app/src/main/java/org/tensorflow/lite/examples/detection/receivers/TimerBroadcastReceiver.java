@@ -19,13 +19,7 @@ public class TimerBroadcastReceiver  extends BroadcastReceiver {
             Intent serviceIntent = new Intent(context, DetectorService.class);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-                if (DetectorService.isRunning) {
-                    // Pause the timer
-                    serviceIntent.setAction("PAUSE_TIMER");
-                } else {
-                    // Start the timer
-                    serviceIntent.setAction("START_TIMER");
-                }
+                serviceIntent.setAction("START_TIMER");
 
                 context.startForegroundService(serviceIntent);
             }
