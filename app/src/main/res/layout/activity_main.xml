@@ -4,49 +4,38 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:background="@color/white"
+    tools:context="com.pytorch.project.gazeguard.monitoringmode.MainActivity">
 
-
-    <Button
-        android:id="@+id/cameraButton"
-        android:layout_width="wrap_content"
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Camera"
-        app:layout_constraintBottom_toBottomOf="@+id/detectButton"
+        android:layout_marginBottom="279dp"
+        android:background="@color/app_theme"
+        android:theme="@style/Theme.ProjectApp"
+        app:layout_constraintBottom_toTopOf="@+id/startButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.655"
-        app:layout_constraintStart_toEndOf="@+id/detectButton"
-        app:layout_constraintTop_toTopOf="@+id/detectButton"
-        app:layout_constraintVertical_bias="0.0" />
-
-    <Button
-        android:id="@+id/detectButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="80dp"
-        android:layout_marginBottom="126dp"
-        android:text="Detect"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imageView" />
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="416dp"
-        android:layout_height="416dp"
-        android:scaleType="fitStart"
-        app:layout_constraintBottom_toTopOf="@+id/detectButton"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:srcCompat="@drawable/kite" />
+        app:layout_constraintVertical_bias="0.0"
+        app:popupTheme="@style/Base.Theme.ProjectApp"
+        app:title="Measure Screen Time"
+        app:titleTextColor="@color/white" />
 
-    <org.tensorflow.lite.examples.detection.customview.OverlayView
-        android:id="@+id/tracking_overlay"
-        android:layout_width="416dp"
-        android:layout_height="416dp"
+    <Button
+        android:id="@+id/startButton"
+        android:layout_width="148dp"
+        android:layout_height="69dp"
+        android:text="@string/Start"
+        android:textAllCaps="true"
+        android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.518" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

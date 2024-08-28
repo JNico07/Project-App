@@ -1,33 +1,21 @@
 <resources>
-    <!--    <string name="tfe_od_app_name" translation_description="Object Detection demo app [CHAR_LIMIT=40]">GazeGuard</string>-->
-    <string name="tfe_od_camera_error" translation_description="Error regarding camera support[CHAR_LIMIT=40]">This device doesn\'t support Camera2 API.</string>
-
     <string name="app_name">GazeGuard</string>
-    <string name="full_name">Full Name</string>
-    <string name="login">Log in</string>
+    <string name="image_view">Image View</string>
+    <string name="detect">Detect</string>
+    <string name="run_model">Running the model...</string>
+    <string name="restart">Restart</string>
+    <string name="select">Select</string>
+    <string name="Start">Start</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
+    <string name="login">Log in</string>
+    <string name="full_name">Full Name</string>
     <string name="register">Register</string>
-    <string name="click_to_login">Click to Login</string>
-    <string name="click_to_register">Click to Register</string>
-    <string name="logout">logout</string>
-
-    <string name="client_id">740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com</string>
-    <string name="title_activity_parent_dashboard">Parent_Dashboard</string>
-    <string name="navigation_drawer_open">Open navigation drawer</string>
-    <string name="navigation_drawer_close">Close navigation drawer</string>
-    <string name="nav_header_title">Android Studio</string>
-    <string name="nav_header_subtitle">android.studio@android.com</string>
-    <string name="nav_header_desc">Navigation header</string>
-    <string name="action_settings">Settings</string>
-
-    <string name="menu_home">Home</string>
-    <string name="menu_gallery">Gallery</string>
-    <string name="menu_slideshow">Slideshow</string>
-    <string name="title_activity_measure_screentime">Measure_Screentime</string>
 
     <string name="open_nav">Open Navigation Drawer</string>
     <string name="close_nav">Close Navigation Drawer</string>
+
+    <string name="client_id">740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

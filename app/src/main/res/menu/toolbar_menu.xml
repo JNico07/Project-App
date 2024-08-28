@@ -2,8 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/show_ET_cam"
-        android:title="Toggle Eye Tracking Camera" />
+        android:id="@+id/stop"
+        android:title="Stop"/>
     <item
         android:id="@+id/back"
         android:title="Back"/>

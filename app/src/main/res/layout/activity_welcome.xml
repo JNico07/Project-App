@@ -2,10 +2,11 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/app_theme"
-    tools:context=".Welcome">
+    tools:context="com.pytorch.project.gazeguard.common.WelcomeActivity">
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
@@ -62,7 +63,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:layout_margin="20dp">
 
 
             <TextView
@@ -103,7 +105,7 @@
                 app:layout_constraintStart_toStartOf="@+id/googleSingin"
                 app:layout_constraintTop_toTopOf="@+id/googleSingin"
                 app:layout_constraintVertical_bias="0.0"
-                app:srcCompat="@drawable/fui_ic_googleg_color_24dp" />
+                app:srcCompat="@drawable/google" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
