@@ -55,22 +55,26 @@ public class ChooseActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_choose);
+        parentDashboard = findViewById(R.id.parent_dashboard);
+        monitorMode = findViewById(R.id.monitor_mode);
 
-        // Initialization
+        prefsUserName = PreferenceManager.getDefaultSharedPreferences(this);
+
+        // Firebase DB
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
         if (currentUser != null) {
             uid = currentUser.getUid();
         } else {
+            // Handle case where user is not logged in
+            // For example, redirect to login activity
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
             finish();
             return;
         }
 
-        parentDashboard = findViewById(R.id.parent_dashboard);
-        monitorMode = findViewById(R.id.monitor_mode);
-
+        // to Parent's Dashboard
         parentDashboard.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -80,23 +84,31 @@ public class ChooseActivity extends AppCompatActivity {
             }
         });
 
+        // to Track Screen-time
         monitorMode.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (SharedPrefsUtil.isUserNameSet(ChooseActivity.this)) {
-                    childNumber = SharedPrefsUtil.getChildNumber(ChooseActivity.this);
+
+                isUsernameSet = prefsUserName.getBoolean(PREF_USERNAME_SET_KEY, false);
+                if (isUsernameSet) {
+                    savedUserName = prefsUserName.getString(PREF_USERNAME_KEY, "");
+                    childNumber = prefsUserName.getString(PREF_CHILD_NUMBER_KEY, ""); // Retrieve the child number
 
                     Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                     startActivity(intent);
                     finish();
+
                 } else {
                     showUsernameDialog();
                 }
+
             }
         });
+
     }
 
     private void showUsernameDialog() {
+
         dialog = new Dialog(ChooseActivity.this);
         dialog.setContentView(R.layout.custom_dialog_box);
         dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -124,6 +136,7 @@ public class ChooseActivity extends AppCompatActivity {
             }
         });
 
+        // CONFIRM BUTTON
         btnDialogConfirm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -135,12 +148,17 @@ public class ChooseActivity extends AppCompatActivity {
                 }
 
                 if (currentUser != null) {
+                    // save username on Database
                     userNameDatabase = FirebaseDatabase.getInstance().getReference()
                             .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
                     userNameDatabase.setValue(userName);
 
-                    SharedPrefsUtil.setUserName(ChooseActivity.this, userName);
-                    SharedPrefsUtil.setChildNumber(ChooseActivity.this, childNumber);
+                    // save username and child number Locally
+                    SharedPreferences.Editor editor = prefsUserName.edit();
+                    editor.putString(PREF_USERNAME_KEY, userName);
+                    editor.putBoolean(PREF_USERNAME_SET_KEY, true);
+                    editor.putString(PREF_CHILD_NUMBER_KEY, childNumber); // Save the child number
+                    editor.apply();
                 }
 
                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
@@ -151,6 +169,7 @@ public class ChooseActivity extends AppCompatActivity {
             }
         });
 
+        // CANCEL BUTTON
         btnDialogExit.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -161,10 +180,17 @@ public class ChooseActivity extends AppCompatActivity {
         });
     }
 
+    //
+    private boolean backToExitPressedOnce = false;
     @Override
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
         startActivity(intent);
     }
+//    @Override
+//    public boolean onSupportNavigateUp() {
+//        onBackPressed();
+//        return true;
+//    }
 }
