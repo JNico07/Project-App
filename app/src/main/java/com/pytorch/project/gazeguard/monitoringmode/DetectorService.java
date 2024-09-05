@@ -1,6 +1,5 @@
 package com.pytorch.project.gazeguard.monitoringmode;
 
-import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -8,7 +7,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -34,19 +32,14 @@ import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageAnalysisConfig;
 import androidx.camera.core.ImageProxy;
 import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 
 import org.pytorch.IValue;
@@ -59,13 +52,8 @@ import org.pytorch.torchvision.TensorImageUtils;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class DetectorService extends Service implements LifecycleOwner{
 
@@ -84,9 +72,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private SharedPreferences prefsTimer;
     private FirebaseAuth mAuth;
-    private FirebaseUser currentUser;
     private DatabaseReference mDatabase;
-    private FirebaseFirestore firestore;
 
     private String uid;
     private static final String TIMER_KEY = "timer_seconds";
@@ -130,11 +116,13 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         prefsTimer = PreferenceManager.getDefaultSharedPreferences(this);
 
+        // Initialize the LifecycleRegistry
+        mLifecycleRegistry = new LifecycleRegistry(this);
+        mLifecycleRegistry.setCurrentState(Lifecycle.State.CREATED);
+
         // Firebase DB
         mAuth = FirebaseAuth.getInstance();
-        currentUser = mAuth.getCurrentUser();
-
-        firestore = FirebaseFirestore.getInstance();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
         // Retrieve the childNumber using the utility class
         String childNumber = SharedPrefsUtil.getChildNumber(this);
@@ -144,7 +132,12 @@ public class DetectorService extends Service implements LifecycleOwner{
                     .child("Registered Users").child(uid).child("Child").child(childNumber).child("ScreenTime");
         }
 
+        startBackgroundThread();
+        setupCameraX();
+
         context = this;
+        startForeground(NOTIFICATION_ID, showNotification("00:00:00"));
+
 
         try {
             if (mModule == null) {
@@ -164,42 +157,24 @@ public class DetectorService extends Service implements LifecycleOwner{
             pauseTimer(); // Pause the timer
         }
 
-        // Initialize the LifecycleRegistry
-        mLifecycleRegistry = new LifecycleRegistry(this);
-        mLifecycleRegistry.setCurrentState(Lifecycle.State.CREATED);
-        startForeground(NOTIFICATION_ID, showNotification("00:00:00"));
-
-        startBackgroundThread();
-
-        handler.postDelayed(() -> {
-            // Move the Lifecycle state to STARTED
-            mLifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
-            setupCameraX();
-        }, 10000); // Delay before setting up CameraX
-
-
-        // Schedule the timer reset at 12 AM
-        scheduleTimerReset();
+        // Move the Lifecycle state to STARTED
+        mLifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
 
     }
 
-//    private int retryCount = 0;
-//    private static final int MAX_RETRIES = 3;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            stopSelf();
-            return START_NOT_STICKY;
-        }
+//        Toast.makeText(context, "Time: ", Toast.LENGTH_SHORT).show();
 
         if (intent != null) {
             String action = intent.getAction();
             if ("START_TIMER".equals(action)) {
-                handler.postDelayed(this::setupCameraX, 5000); // delay
+                setupCameraX();
             } else if ("PAUSE_TIMER".equals(action)) {
                 pauseTimer();
             }
         }
+
         return START_STICKY;
     }
 
@@ -265,6 +240,7 @@ public class DetectorService extends Service implements LifecycleOwner{
             detectedClassName = PrePostProcessor.mClasses[result.classIndex];
 
 //            Log.d("Object Detection", "Detected class: " + PrePostProcessor.mClasses[result.classIndex] + ", Score: " + result.score);
+
 //            Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
 
             eyeTimeTracker();
@@ -283,31 +259,29 @@ public class DetectorService extends Service implements LifecycleOwner{
     }
 
     private void setupCameraX() {
-        try {
-            final ImageAnalysisConfig imageAnalysisConfig = new ImageAnalysisConfig.Builder()
-                    .setLensFacing(CameraX.LensFacing.FRONT)
-                    .setTargetResolution(new Size(480, 640))
-                    .setCallbackHandler(mBackgroundHandler)
-                    .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-                    .build();
+        // Define the image analysis configuration without UI (TextureView).
+        final ImageAnalysisConfig imageAnalysisConfig = new ImageAnalysisConfig.Builder()
+                .setLensFacing(CameraX.LensFacing.FRONT)
+                .setTargetResolution(new Size(480, 640))
+                .setCallbackHandler(mBackgroundHandler)
+                .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+                .build();
 
-            final ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
-            imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
-                if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 100) {
-                    return;
-                }
+        final ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
+        imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
+            if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 100) {
+                return;
+            }
 
-                final EyeTrackerActivity.AnalysisResult result = analyzeImage(image, rotationDegrees);
-                if (result != null) {
-                    mLastAnalysisResultTime = SystemClock.elapsedRealtime();
-                }
-            });
 
-            CameraX.bindToLifecycle((LifecycleOwner) this, imageAnalysis);
-        } catch (Exception e) {
-            Log.e("CameraX Setup", "Error setting up CameraX", e);
-            handler.postDelayed(this::setupCameraX, 10000); // Retry in 10 seconds
-        }
+            final EyeTrackerActivity.AnalysisResult result = analyzeImage(image, rotationDegrees);
+            if (result != null) {
+                mLastAnalysisResultTime = SystemClock.elapsedRealtime();
+            }
+        });
+
+        // Bind ImageAnalysis to the lifecycle of the service using a LifecycleOwner.
+        CameraX.bindToLifecycle((LifecycleOwner) this, imageAnalysis);
     }
 
 
@@ -321,7 +295,6 @@ public class DetectorService extends Service implements LifecycleOwner{
             isPause = false;
         }
         saveTimerState();
-        updateTimer(); // Ensure the timer is updated immediately
     }
     private void pauseTimer() {
         if (isRunning && isPause) {
@@ -410,53 +383,10 @@ public class DetectorService extends Service implements LifecycleOwner{
                 return false;
 
         }
-        }
-
-    private void scheduleTimerReset() {
-        Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-
-        long initialDelay = calendar.getTimeInMillis() - System.currentTimeMillis();
-        if (initialDelay < 0) {
-            initialDelay += 24 * 60 * 60 * 1000; // Add 24 hours if the time has already passed
-        }
-
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                resetTimer();
-                handler.postDelayed(this, 24 * 60 * 60 * 1000); // Schedule next reset in 24 hours
-            }
-        }, initialDelay);
     }
 
-    private void resetTimer() {
-        // Store the current screen time in Firestore
-        String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-        Map<String, Object> screenTimeData = new HashMap<>();
-        screenTimeData.put("date", currentDate);
-        screenTimeData.put("screenTime", timerSeconds);
 
 
-        String childUserName = SharedPrefsUtil.getUserName(context);
-        if (currentUser != null) {
-            String uid = currentUser.getUid();
-            firestore.collection("ScreenTimeRecords")
-                    .document(uid)
-                    .collection(childUserName)
-                    .document(currentDate)
-                    .set(screenTimeData);
-//                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Screen time data successfully written!"))
-//                    .addOnFailureListener(e -> Log.w("Firestore", "Error writing screen time data", e));
-        }
 
-        // Reset the timer
-        timerSeconds = 0;
-        saveTimerState();
-        updateNotification("00:00:00");
-    }
 
 }
