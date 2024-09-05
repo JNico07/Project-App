@@ -165,41 +165,15 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         final Button buttonLive = findViewById(R.id.startButton);
         buttonLive.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-//              final Intent intent = new Intent(MainActivity.this, ObjectDetectionActivity.class);
-//              startActivity(intent);
-
-              // SERVICE
-              Intent intentService = new Intent(getApplicationContext(), DetectorService.class);
-              intentService.setAction("START_TIMER");
-
-              Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
-
-              startService(intentService);
-
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
+                } else {
+                    startDetectorService();
+                }
             }
         });
 
-//        mButtonDetect = findViewById(R.id.detectButton);
-//        mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-//        mButtonDetect.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                mButtonDetect.setEnabled(false);
-//                mProgressBar.setVisibility(ProgressBar.VISIBLE);
-//                mButtonDetect.setText(getString(R.string.run_model));
-//
-//                mImgScaleX = (float)mBitmap.getWidth() / PrePostProcessor.mInputWidth;
-//                mImgScaleY = (float)mBitmap.getHeight() / PrePostProcessor.mInputHeight;
-//
-//                mIvScaleX = (mBitmap.getWidth() > mBitmap.getHeight() ? (float)mImageView.getWidth() / mBitmap.getWidth() : (float)mImageView.getHeight() / mBitmap.getHeight());
-//                mIvScaleY  = (mBitmap.getHeight() > mBitmap.getWidth() ? (float)mImageView.getHeight() / mBitmap.getHeight() : (float)mImageView.getWidth() / mBitmap.getWidth());
-//
-//                mStartX = (mImageView.getWidth() - mIvScaleX * mBitmap.getWidth())/2;
-//                mStartY = (mImageView.getHeight() -  mIvScaleY * mBitmap.getHeight())/2;
-//
-//                Thread thread = new Thread(MainActivity.this);
-//                thread.start();
-//            }
-//        });
+
 
         try {
             mModule = LiteModuleLoader.load(MainActivity.assetFilePath(getApplicationContext(), "best.torchscript.ptl"));
@@ -217,44 +191,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
     }
 
-//    @Override
-//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        super.onActivityResult(requestCode, resultCode, data);
-//        if (resultCode != RESULT_CANCELED) {
-//            switch (requestCode) {
-//                case 0:
-//                    if (resultCode == RESULT_OK && data != null) {
-//                        mBitmap = (Bitmap) data.getExtras().get("data");
-//                        Matrix matrix = new Matrix();
-//                        matrix.postRotate(90.0f);
-//                        mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
-//                        mImageView.setImageBitmap(mBitmap);
-//                    }
-//                    break;
-//                case 1:
-//                    if (resultCode == RESULT_OK && data != null) {
-//                        Uri selectedImage = data.getData();
-//                        String[] filePathColumn = {MediaStore.Images.Media.DATA};
-//                        if (selectedImage != null) {
-//                            Cursor cursor = getContentResolver().query(selectedImage,
-//                                    filePathColumn, null, null, null);
-//                            if (cursor != null) {
-//                                cursor.moveToFirst();
-//                                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-//                                String picturePath = cursor.getString(columnIndex);
-//                                mBitmap = BitmapFactory.decodeFile(picturePath);
-//                                Matrix matrix = new Matrix();
-//                                matrix.postRotate(90.0f);
-//                                mBitmap = Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(), mBitmap.getHeight(), matrix, true);
-//                                mImageView.setImageBitmap(mBitmap);
-//                                cursor.close();
-//                            }
-//                        }
-//                    }
-//                    break;
-//            }
-//        }
-//    }
 
     @Override
     public void run() {
@@ -296,11 +232,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             }
         }, 2000); // 2 seconds delay before resetting
     }
-//    @Override
-//    public boolean onSupportNavigateUp() {
-//        onBackPressed();
-//        return true;
-//    }
 
 
     @Override
@@ -321,5 +252,29 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
         return super.onOptionsItemSelected(item);
     }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) { // 1 is the request code for camera permission
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                // Permission was granted, start the service
+                startDetectorService();
+            } else {
+                // Permission was denied, show a message to the user
+                Toast.makeText(this, "Camera permission is required to start the service", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    private void startDetectorService() {
+        Intent intentService = new Intent(getApplicationContext(), DetectorService.class);
+        intentService.setAction("START_TIMER");
+        Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
+        startService(intentService);
+    }
+
+
 
 }
