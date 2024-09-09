@@ -1,4 +1,4 @@
-package com.pytorch.project.gazeguard.parentdashboard;
+package com.pytorch.project.gazeguard.parentdashboard.optionfragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -22,6 +22,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.pytorch.project.gazeguard.auth.LoginActivity;
+import com.pytorch.project.gazeguard.parentdashboard.ParentAdapter;
+import com.pytorch.project.gazeguard.parentdashboard.ParentModel;
 
 import org.pytorch.demo.objectdetection.R;
 

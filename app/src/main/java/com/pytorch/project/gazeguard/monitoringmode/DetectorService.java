@@ -183,7 +183,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     }
 
-//    private int retryCount = 0;
+    //    private int retryCount = 0;
 //    private static final int MAX_RETRIES = 3;
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -410,12 +410,12 @@ public class DetectorService extends Service implements LifecycleOwner{
                 return false;
 
         }
-        }
+    }
 
     private void scheduleTimerReset() {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.HOUR_OF_DAY, 21);
+        calendar.set(Calendar.MINUTE, 41);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
@@ -444,10 +444,18 @@ public class DetectorService extends Service implements LifecycleOwner{
         String childUserName = SharedPrefsUtil.getUserName(context);
         if (currentUser != null) {
             String uid = currentUser.getUid();
+
+            // Get the unique ID for the document
+            String uniqueId = firestore.collection("ScreenTimeRecords")
+                    .document(uid)              // Replace uid with the actual user's UID
+                    .collection(childUserName)       // Replace childName with the actual child's name
+                    .document()                  // Auto-generates a unique ID
+                    .getId();
+
             firestore.collection("ScreenTimeRecords")
                     .document(uid)
                     .collection(childUserName)
-                    .document(currentDate)
+                    .document(uniqueId)
                     .set(screenTimeData);
 //                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Screen time data successfully written!"))
 //                    .addOnFailureListener(e -> Log.w("Firestore", "Error writing screen time data", e));

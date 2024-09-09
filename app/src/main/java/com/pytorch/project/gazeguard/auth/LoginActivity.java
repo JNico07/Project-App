@@ -31,7 +31,7 @@ import java.util.Objects;
 public class LoginActivity extends AppCompatActivity {
 
     // Declare objects
-    FirebaseAuth mAuth;
+    public FirebaseAuth mAuth;
     TextInputEditText editTextEmail, editTextPassword;
     Button buttonLogin;
     ProgressBar progressBar;

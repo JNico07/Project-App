@@ -1,4 +1,4 @@
-package com.pytorch.project.gazeguard.common;
+    package com.pytorch.project.gazeguard.common;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,9 +7,6 @@ import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.ViewGroup;
@@ -31,11 +28,16 @@ import com.pytorch.project.gazeguard.parentdashboard.ParentDashboardActivity;
 
 import org.pytorch.demo.objectdetection.R;
 
-public class ChooseActivity extends AppCompatActivity {
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Random;
+
+    public class ChooseActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     FirebaseUser currentUser;
-    private DatabaseReference userNameDatabase;
+    private DatabaseReference childDatabase;
     TextView parentDashboard, monitorMode;
     private SharedPreferences prefsUserName;
     private String uid;
@@ -96,72 +98,73 @@ public class ChooseActivity extends AppCompatActivity {
         });
     }
 
-    private void showUsernameDialog() {
-        dialog = new Dialog(ChooseActivity.this);
-        dialog.setContentView(R.layout.custom_dialog_box);
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.custom_dialog_bg));
-        dialog.setCancelable(false);
+        private void showUsernameDialog() {
+            dialog = new Dialog(ChooseActivity.this);
+            dialog.setContentView(R.layout.custom_dialog_box);
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.custom_dialog_bg));
+            dialog.setCancelable(false);
 
-        dialog.show();
+            dialog.show();
 
-        btnDialogExit = dialog.findViewById(R.id.btnDialogExit);
-        btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
-        editTextUserName = dialog.findViewById(R.id.userName);
+            btnDialogExit = dialog.findViewById(R.id.btnDialogExit);
+            btnDialogConfirm = dialog.findViewById(R.id.btnDialogConfirm);
+            editTextUserName = dialog.findViewById(R.id.userName);
 
-        userNameDatabase = FirebaseDatabase.getInstance().getReference().child("Registered Users").child(uid).child("Child");
+            childDatabase = FirebaseDatabase.getInstance().getReference().child("Registered Users").child(uid).child("Child");
 
-        userNameDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                int childCount = (int) dataSnapshot.getChildrenCount();
-                childNumber = "Child_" + (childCount + 1);
-            }
+            // Generate a random 6-digit number
+            String childNumber = generateRandomChildNumber();
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
+            btnDialogConfirm.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    String dateCreated = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
+                    String userName = String.valueOf(editTextUserName.getText());
 
-            }
-        });
+                    if (TextUtils.isEmpty(userName)) {
+                        Toast.makeText(ChooseActivity.this, "Please enter Username", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
 
-        btnDialogConfirm.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String userName = String.valueOf(editTextUserName.getText());
+                    if (currentUser != null) {
+                        childDatabase = FirebaseDatabase.getInstance().getReference()
+                                .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
+                        childDatabase.setValue(userName);
+                        childDatabase = FirebaseDatabase.getInstance().getReference()
+                                .child("Registered Users").child(uid).child("Child").child(childNumber).child("dateCreated");
+                        childDatabase.setValue(dateCreated);
 
-                if (TextUtils.isEmpty(userName)) {
-                    Toast.makeText(ChooseActivity.this, "Please enter Username", Toast.LENGTH_SHORT).show();
-                    return;
+                        SharedPrefsUtil.setUserName(ChooseActivity.this, userName);
+                        SharedPrefsUtil.setChildNumber(ChooseActivity.this, childNumber);
+                    }
+
+                    Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(intent);
+                    finish();
+
+                    dialog.dismiss();
                 }
+            });
 
-                if (currentUser != null) {
-                    userNameDatabase = FirebaseDatabase.getInstance().getReference()
-                            .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
-                    userNameDatabase.setValue(userName);
-
-                    SharedPrefsUtil.setUserName(ChooseActivity.this, userName);
-                    SharedPrefsUtil.setChildNumber(ChooseActivity.this, childNumber);
+            btnDialogExit.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
+                    startActivity(intent);
+                    dialog.dismiss();
                 }
+            });
+        }
 
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                startActivity(intent);
-                finish();
+        private String generateRandomChildNumber() {
+            Random random = new Random();
+            int number = random.nextInt(900000) + 100000; // Generates a number between 100000 and 999999
+            return "child" + number;
+        }
 
-                dialog.dismiss();
-            }
-        });
 
-        btnDialogExit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-                startActivity(intent);
-                dialog.dismiss();
-            }
-        });
-    }
-
-    @Override
+        @Override
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);

@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context="com.pytorch.project.gazeguard.parentdashboard.HomeFragment">
+    tools:context="com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment">
 
 
     <com.google.android.material.appbar.AppBarLayout
@@ -35,71 +35,6 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!--    <androidx.cardview.widget.CardView-->
-    <!--        android:id="@+id/cardView2"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="40dp"-->
-    <!--        android:layout_below="@+id/appBarLayout"-->
-    <!--        android:layout_marginTop="0dp">-->
-
-    <!--        <RelativeLayout-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="40dp">-->
-
-    <!--&lt;!&ndash;            <TextView&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:id="@+id/parentName"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_width="240dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_height="33dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_alignParentStart="true"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_alignParentTop="true"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_alignParentEnd="true"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_alignParentBottom="true"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_marginStart="90dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_marginTop="11dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_marginEnd="81dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:layout_marginBottom="14dp"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:text="Hello World!"&ndash;&gt;-->
-    <!--&lt;!&ndash;                android:textAlignment="center" />&ndash;&gt;-->
-
-    <!--        </RelativeLayout>-->
-
-
-    <!--    </androidx.cardview.widget.CardView>-->
-
-    <!--    <TextView-->
-    <!--        android:id="@+id/textView2"-->
-    <!--        android:layout_width="wrap_content"-->
-    <!--        android:layout_height="wrap_content"-->
-    <!--        android:text="Child Name"-->
-    <!--        android:textColor="@color/black"-->
-    <!--        android:textSize="20sp"-->
-    <!--        app:layout_constraintBottom_toBottomOf="parent"-->
-    <!--        app:layout_constraintEnd_toStartOf="@+id/timerTextPDash"-->
-    <!--        app:layout_constraintHorizontal_bias="0.348"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent"-->
-    <!--        app:layout_constraintVertical_bias="0.382"-->
-    <!--        android:visibility="gone"/>-->
-
-    <!--    <TextView-->
-    <!--        android:id="@+id/timerTextPDash"-->
-    <!--        android:layout_width="136dp"-->
-    <!--        android:layout_height="105dp"-->
-    <!--        android:layout_gravity="bottom|center_horizontal"-->
-    <!--        android:background="@drawable/bg"-->
-    <!--        android:paddingTop="30dp"-->
-    <!--        android:text="00:00:00"-->
-    <!--        android:textAlignment="center"-->
-    <!--        android:textColor="@color/black"-->
-    <!--        android:textSize="30sp"-->
-    <!--        app:layout_constraintBottom_toTopOf="@+id/user_details"-->
-    <!--        app:layout_constraintEnd_toEndOf="parent"-->
-    <!--        app:layout_constraintHorizontal_bias="0.941"-->
-    <!--        app:layout_constraintStart_toStartOf="parent"-->
-    <!--        app:layout_constraintTop_toTopOf="parent"-->
-    <!--        app:layout_constraintVertical_bias="0.508"-->
-    <!--        android:visibility="gone"/>-->
-
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv"
@@ -112,6 +47,7 @@
         android:layout_marginStart="0dp"
         android:layout_marginTop="0dp"
         android:layout_marginEnd="0dp"
-        android:layout_marginBottom="0dp" />
+        android:layout_marginBottom="0dp"
+        android:clickable="true"/>
 
 </RelativeLayout>
