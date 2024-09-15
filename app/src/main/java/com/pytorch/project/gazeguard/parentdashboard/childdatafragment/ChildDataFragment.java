@@ -11,8 +11,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
+import com.pytorch.project.gazeguard.common.DateValueFormatter;
+
 import org.pytorch.demo.objectdetection.R;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +51,7 @@ public class ChildDataFragment extends Fragment {
 
         TextView childNameTextView = view.findViewById(R.id.childNameTextView);
         LinearLayout recordsContainer = view.findViewById(R.id.recordsContainer);
+        LineChart screenTimeChart = view.findViewById(R.id.screenTimeChart);
 
         if (getArguments() != null) {
             String childName = getArguments().getString(ARG_CHILD_NAME);
@@ -50,22 +60,70 @@ public class ChildDataFragment extends Fragment {
             childNameTextView.setText(childName);
 
             if (childDataList != null) {
-                // Iterate through each record and add it to the LinearLayout
-                for (Map<String, Object> record : childDataList) {
+                List<Entry> entries = new ArrayList<>();
+                List<String> dates = new ArrayList<>(); // List to store date strings
+
+                for (int i = 0; i < childDataList.size(); i++) {
+                    Map<String, Object> record = childDataList.get(i);
+                    String date = (String) record.get("date");
+                    float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
+
+                    // Add the date to the dates list
+                    dates.add(date);
+
+                    // Add data entries (index, screenTime)
+                    entries.add(new Entry(i, screenTime));
+
+                    // Inflate and populate the record views
                     View recordView = LayoutInflater.from(getContext()).inflate(R.layout.record_item, recordsContainer, false);
 
                     TextView dateTextView = recordView.findViewById(R.id.dateTextView);
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
+                    View screenTimeBar = recordView.findViewById(R.id.screenTimeBar);
 
-                    String date = (String) record.get("date");
-                    String screenTime = String.valueOf(record.get("screenTime"));
-
+                    // Set the date and screen time
                     dateTextView.setText("Date: " + date);
-                    screenTimeTextView.setText("Screen Time: " + screenTime);
+                    screenTimeTextView.setText("Screen Time: " + screenTime + " mns");
 
+                    // Adjust the width of the screen time bar based on the screen time value
+                    // This assumes the max screen time value is, for example, 10 hours
+                    float barWidth = (screenTime / 10.0f) * 100; // Scale the screen time to percentage
+                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) screenTimeBar.getLayoutParams();
+                    params.width = (int) barWidth; // Set the width based on screen time
+                    screenTimeBar.setLayoutParams(params);
+
+                    // Add the record view to the container
                     recordsContainer.addView(recordView);
                 }
+
+
+                // Create a LineDataSet and LineData
+                LineDataSet dataSet = new LineDataSet(entries, "Screen Time");
+                dataSet.setColor(ColorTemplate.COLORFUL_COLORS[0]);
+                dataSet.setValueTextColor(ColorTemplate.COLORFUL_COLORS[0]);
+
+                LineData lineData = new LineData(dataSet);
+                screenTimeChart.setData(lineData);
+
+                // Configure XAxis
+                XAxis xAxis = screenTimeChart.getXAxis();
+                xAxis.setPosition(XAxis.XAxisPosition.TOP); // Better visibility at the bottom
+                xAxis.setGranularity(1f); // Allow intervals of 1 between values
+                xAxis.setLabelCount(5, true); // Set a smaller label count, adjust as needed
+                xAxis.setValueFormatter(new DateValueFormatter(dates)); // Set custom date formatter
+
+                // Rotate the labels for better visibility
+                xAxis.setLabelRotationAngle(45f); // Rotate the labels by 45 degrees
+
+                // Avoid drawing grid lines to make the chart cleaner
+                xAxis.setDrawGridLines(false);
+
+
+                // Refresh the chart
+                screenTimeChart.invalidate();
             }
         }
     }
+
+
 }

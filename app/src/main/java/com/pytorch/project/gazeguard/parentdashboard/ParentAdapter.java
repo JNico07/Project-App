@@ -96,7 +96,6 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                                             Log.d("Firestore", "Date Started: " + dateCreated);
 
                                             childDataList.add(document.getData());
-
                                         }
                                             // Open Fragment and Pass the child data list
                                             ChildDataFragment fragment = ChildDataFragment.newInstance(childUserName, childDataList);

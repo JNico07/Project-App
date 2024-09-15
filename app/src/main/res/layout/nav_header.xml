@@ -7,7 +7,7 @@
     android:layout_height="176dp"
     android:background="@color/app_theme"
     android:theme="@style/Theme.ProjectApp"
-    android:paddingTop="20dp">
+    android:paddingTop="40dp">
 
     <!-- ActionBar (Toolbar) -->
     <com.google.android.material.appbar.AppBarLayout
@@ -32,7 +32,7 @@
         android:layout_width="93dp"
         android:layout_height="66dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="25dp"
         android:layout_marginBottom="30dp"
         android:contentDescription="LOGO"
         android:src="@drawable/logo2"

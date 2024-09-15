@@ -1,21 +1,42 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp">
+    android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/dateTextView"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Date: "
-        android:textSize="16sp" />
+        android:orientation="horizontal"
+        android:padding="8dp">
 
-    <TextView
-        android:id="@+id/screenTimeTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Screen Time: "
-        android:textSize="16sp"
-        android:layout_marginTop="4dp" />
+        <!-- Date on the left -->
+        <TextView
+            android:id="@+id/dateTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Date:"
+            android:textSize="16sp" />
+
+        <!-- Screen Time on the right -->
+        <TextView
+            android:id="@+id/screenTimeTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Screen Time:"
+            android:textSize="16sp"
+            android:gravity="end" />
+    </LinearLayout>
+
+    <!-- Bar for screen time representation -->
+    <View
+        android:id="@+id/screenTimeBar"
+        android:layout_width="match_parent"
+        android:layout_height="4dp"
+        android:background="?attr/colorPrimary"
+        android:layout_marginTop="8dp"
+        android:layout_marginLeft="8dp"/>
+
 </LinearLayout>
