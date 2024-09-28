@@ -43,7 +43,6 @@ public class SetLimitFragment extends Fragment {
         parentNameTextView = fragmentLimitAlertsView.findViewById(R.id.parentName);
         recyclerView = fragmentLimitAlertsView.findViewById(R.id.rvSetLimit);
 
-
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
         if (currentUser == null) {
@@ -61,10 +60,13 @@ public class SetLimitFragment extends Fragment {
         uid = currentUser.getUid();
         FirebaseRecyclerOptions<ParentModel> options =
                 new FirebaseRecyclerOptions.Builder<ParentModel>()
-                        .setQuery(FirebaseDatabase.getInstance().getReference("Registered Users").child(uid).child("Child")
+                        .setQuery(FirebaseDatabase.getInstance()
+                                        .getReference("Registered Users")
+                                        .child(uid)
+                                        .child("Child")
                                 , ParentModel.class)
                         .build();
-        setLimitAdapter = new SetLimitAdapter(options);
+        setLimitAdapter = new SetLimitAdapter(options, uid);
         recyclerView.setAdapter(setLimitAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -84,4 +86,8 @@ public class SetLimitFragment extends Fragment {
         super.onStop();
         setLimitAdapter.stopListening();
     }
+
+
+
+
 }
