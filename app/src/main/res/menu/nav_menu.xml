@@ -12,13 +12,13 @@
             android:icon="@drawable/nav_home"
             android:title="Home"/>
         <item
+            android:id="@+id/nav_set_limit"
+            android:icon="@drawable/baseline_limit"
+            android:title="Set Limit"/>
+        <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/nav_setting"
             android:title="Settings"/>
-        <item
-            android:id="@+id/nav_limits_alerts"
-            android:icon="@drawable/nav_alertlmt"
-            android:title="Limits &amp; Alerts"/>
         <item
             android:id="@+id/nav_about"
             android:icon="@drawable/nav_about"

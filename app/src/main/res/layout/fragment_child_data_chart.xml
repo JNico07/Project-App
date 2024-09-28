@@ -22,15 +22,16 @@
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="5dp"
-        android:layout_marginEnd="10dp"
+        android:layout_marginEnd="12dp"
         android:layout_marginRight="10dp"
         android:layout_marginBottom="10dp" />
 
+    <!--  Display screen time list records  -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/screenTimeChart"
-        android:layout_marginTop="16dp">
+        android:layout_marginTop="5dp">
 
         <LinearLayout
             android:layout_width="match_parent"

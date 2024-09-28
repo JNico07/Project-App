@@ -120,9 +120,9 @@ import java.util.Random;
                 @Override
                 public void onClick(View v) {
                     String dateCreated = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-                    String userName = String.valueOf(editTextUserName.getText());
+                    String childUserName = String.valueOf(editTextUserName.getText());
 
-                    if (TextUtils.isEmpty(userName)) {
+                    if (TextUtils.isEmpty(childUserName)) {
                         Toast.makeText(ChooseActivity.this, "Please enter Username", Toast.LENGTH_SHORT).show();
                         return;
                     }
@@ -130,12 +130,12 @@ import java.util.Random;
                     if (currentUser != null) {
                         childDatabase = FirebaseDatabase.getInstance().getReference()
                                 .child("Registered Users").child(uid).child("Child").child(childNumber).child("name");
-                        childDatabase.setValue(userName);
+                        childDatabase.setValue(childUserName);
                         childDatabase = FirebaseDatabase.getInstance().getReference()
                                 .child("Registered Users").child(uid).child("Child").child(childNumber).child("dateCreated");
                         childDatabase.setValue(dateCreated);
 
-                        SharedPrefsUtil.setUserName(ChooseActivity.this, userName);
+                        SharedPrefsUtil.setUserName(ChooseActivity.this, childUserName);
                         SharedPrefsUtil.setChildNumber(ChooseActivity.this, childNumber);
                     }
 
@@ -164,7 +164,7 @@ import java.util.Random;
         }
 
 
-        @Override
+    @Override
     public void onBackPressed() {
         super.onBackPressed();
         Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);

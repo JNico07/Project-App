@@ -42,7 +42,7 @@ public class ChildDataFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_child_data, container, false);
+        return inflater.inflate(R.layout.fragment_child_data_chart, container, false);
     }
 
     @Override
@@ -81,9 +81,9 @@ public class ChildDataFragment extends Fragment {
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
                     View screenTimeBar = recordView.findViewById(R.id.screenTimeBar);
 
-                    // Set the date and screen time
+                    // Set the date and formatted screen time
                     dateTextView.setText("Date: " + date);
-                    screenTimeTextView.setText("Screen Time: " + screenTime + " mns");
+                    screenTimeTextView.setText("Screen Time: " + formatScreenTime(screenTime));
 
                     // Adjust the width of the screen time bar based on the screen time value
                     // This assumes the max screen time value is, for example, 10 hours
@@ -95,7 +95,6 @@ public class ChildDataFragment extends Fragment {
                     // Add the record view to the container
                     recordsContainer.addView(recordView);
                 }
-
 
                 // Create a LineDataSet and LineData
                 LineDataSet dataSet = new LineDataSet(entries, "Screen Time");
@@ -118,12 +117,18 @@ public class ChildDataFragment extends Fragment {
                 // Avoid drawing grid lines to make the chart cleaner
                 xAxis.setDrawGridLines(false);
 
-
                 // Refresh the chart
                 screenTimeChart.invalidate();
             }
         }
     }
 
+    // Helper method to format screen time in "hh:mm:ss" format
+    private String formatScreenTime(float screenTimeInSeconds) {
+        int hours = (int) (screenTimeInSeconds / 3600);
+        int minutes = (int) ((screenTimeInSeconds % 3600) / 60);
+        int seconds = (int) (screenTimeInSeconds % 60);
 
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+    }
 }

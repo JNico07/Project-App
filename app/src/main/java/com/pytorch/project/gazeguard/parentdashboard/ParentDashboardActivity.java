@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.Intent;
@@ -23,12 +24,12 @@ import com.pytorch.project.gazeguard.common.ChooseActivity;
 import com.pytorch.project.gazeguard.common.WelcomeActivity;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.AboutFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment;
-import com.pytorch.project.gazeguard.parentdashboard.optionfragments.LimitsAlertsFragment;
+import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SetLimitFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SettingsFragment;
 
 import org.pytorch.demo.objectdetection.R;
 
-public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
+public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, HomeFragment.OnBackPressedListener {
     private DrawerLayout drawerLayout;
     private TextView timeMeasured;
 
@@ -74,12 +75,12 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
                 break;
 
-            case R.id.nav_settings:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
+            case R.id.nav_set_limit:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SetLimitFragment()).commit();
                 break;
 
-            case R.id.nav_limits_alerts:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new LimitsAlertsFragment()).commit();
+            case R.id.nav_settings:
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
                 break;
 
             case R.id.nav_about:
@@ -119,20 +120,24 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
     private boolean doubleBackToExitPressedOnce = false;
     @Override
     public void onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START);
+//        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
+//            drawerLayout.closeDrawer(GravityCompat.START);
+//        } else {
+//            if (doubleBackToExitPressedOnce) {
+//                super.onBackPressed();
+//                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
+//                startActivity(intent);
+//                return;
+//            }
+//            this.doubleBackToExitPressedOnce = true;
+//            Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+//        }
+        Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+        if (fragment instanceof HomeFragment) {
+            // Handle back press in HomeFragment
+            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
         } else {
-            if (doubleBackToExitPressedOnce) {
-                super.onBackPressed();
-                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-                startActivity(intent);
-                return;
-            }
-
-            this.doubleBackToExitPressedOnce = true;
-            Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
-
-
+            super.onBackPressed();
         }
     }
 

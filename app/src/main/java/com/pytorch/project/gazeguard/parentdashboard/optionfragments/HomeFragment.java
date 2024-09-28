@@ -1,5 +1,6 @@
 package com.pytorch.project.gazeguard.parentdashboard.optionfragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -33,7 +34,7 @@ public class HomeFragment extends Fragment {
     private FirebaseUser currentUser;
     private TextView parentNameTextView;
     private RecyclerView recyclerView;
-    ParentAdapter parentAdapter;
+    private ParentAdapter parentAdapter;
     private String uid;
 
     private TextView textView;
@@ -44,12 +45,11 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
         // Inflate the layout for this fragment
         View fragmentHomeView = inflater.inflate(R.layout.fragment_home, container, false);
 
         parentNameTextView = fragmentHomeView.findViewById(R.id.parentName);
-        recyclerView = fragmentHomeView.findViewById(R.id.rv);
+        recyclerView = fragmentHomeView.findViewById(R.id.rvHome);
 
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
@@ -79,7 +79,7 @@ public class HomeFragment extends Fragment {
         return fragmentHomeView;
     }
 
-    private void getParentName(final ParentNameCallback callback) {
+    public void getParentName(final ParentNameCallback callback) {
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         parentNameRef = FirebaseDatabase.getInstance().getReference()
                 .child("Registered Users").child(uid).child("Parent").child("full_name");
@@ -113,5 +113,22 @@ public class HomeFragment extends Fragment {
     public void onStop() {
         super.onStop();
         parentAdapter.stopListening();
+    }
+
+
+    public interface OnBackPressedListener {
+        void onBackPressed();
+    }
+
+    private OnBackPressedListener onBackPressedListener;
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        try {
+            onBackPressedListener = (OnBackPressedListener) context;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement OnBackPressedListener");
+        }
     }
 }
