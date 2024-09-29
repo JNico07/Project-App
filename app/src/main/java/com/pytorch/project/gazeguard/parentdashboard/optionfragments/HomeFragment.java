@@ -115,20 +115,4 @@ public class HomeFragment extends Fragment {
         parentAdapter.stopListening();
     }
 
-
-    public interface OnBackPressedListener {
-        void onBackPressed();
-    }
-
-    private OnBackPressedListener onBackPressedListener;
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-        try {
-            onBackPressedListener = (OnBackPressedListener) context;
-        } catch (ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement OnBackPressedListener");
-        }
-    }
 }

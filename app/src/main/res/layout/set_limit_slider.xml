@@ -2,40 +2,54 @@
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:elevation="6dp"
-    app:cardCornerRadius="6dp"
+    android:elevation="10dp"
+    app:cardCornerRadius="10dp"
     app:cardUseCompatPadding="true"
     xmlns:app="http://schemas.android.com/apk/res-auto">
-
 
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="15dp">
+        android:padding="10dp">
 
-        <TextView
-            android:id="@+id/setLimitValue"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_marginTop="5dp"
-            android:text="Limit: 00 Hrs"
-            android:textColor="@android:color/black"
-            android:textSize="20dp"
-            android:layout_alignParentStart="true"/>
-
+        <!-- User Name TextView -->
         <TextView
             android:id="@+id/userName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true"
             android:layout_marginTop="1dp"
             android:text="UserName"
             android:textColor="@android:color/black"
-            android:textSize="25dp"
-            android:textStyle="bold"
-            android:layout_alignParentEnd="true"/>
+            android:textSize="25sp"
+            android:textStyle="bold" />
 
+        <!-- Question Mark for Set Limit -->
+        <ImageView
+            android:id="@+id/questionMarkSetLimit"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+            android:layout_alignParentTop="true"
+            android:layout_toStartOf="@id/setLimitValue"
+            android:src="@drawable/question_mark_24"
+            android:contentDescription="Question Mark" />
+
+        <!-- Screen Time Limit TextView -->
+        <TextView
+            android:id="@+id/setLimitValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentEnd="true"
+            android:text="Limit: 00 Hrs"
+            android:textColor="@android:color/black"
+            android:textSize="20sp" />
+
+        <!-- Screen Time Limit Slider -->
         <com.google.android.material.slider.Slider
             android:id="@+id/slider"
             android:layout_width="match_parent"
@@ -44,7 +58,44 @@
             android:layout_marginTop="20dp"
             android:stepSize="1.0"
             android:valueFrom="0.0"
-            android:valueTo="12.0" />
+            android:valueTo="12.0"
+            android:contentDescription="Set Screen Time Limit" />
+
+        <!-- Question Mark for Set Unlock Time -->
+        <ImageView
+            android:id="@+id/questionMarkSetUnlockTime"
+            android:layout_width="15dp"
+            android:layout_height="15dp"
+            android:layout_below="@+id/slider"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="5dp"
+            android:layout_toStartOf="@id/setExactTimeValue"
+            android:contentDescription="Question Mark"
+            android:src="@drawable/question_mark_24"/>
+
+        <!-- Set Exact Time TextView -->
+        <TextView
+            android:id="@+id/setExactTimeValue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/slider"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="20dp"
+            android:text="Unlock Time: 00:00"
+            android:textColor="@android:color/black"
+            android:textSize="20sp" />
+
+        <!-- Time Picker for Setting Exact Time -->
+        <TimePicker
+            android:id="@+id/timePicker"
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:layout_below="@+id/setExactTimeValue"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginTop="10dp"
+            android:timePickerMode="spinner"
+            android:contentDescription="Set Exact Time" />
 
     </RelativeLayout>
 

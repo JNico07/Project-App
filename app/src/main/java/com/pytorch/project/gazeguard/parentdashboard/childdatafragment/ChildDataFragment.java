@@ -79,18 +79,11 @@ public class ChildDataFragment extends Fragment {
 
                     TextView dateTextView = recordView.findViewById(R.id.dateTextView);
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
-                    View screenTimeBar = recordView.findViewById(R.id.screenTimeBar);
+//                    View screenTimeBar = recordView.findViewById(R.id.screenTimeBar);
 
                     // Set the date and formatted screen time
                     dateTextView.setText("Date: " + date);
                     screenTimeTextView.setText("Screen Time: " + formatScreenTime(screenTime));
-
-                    // Adjust the width of the screen time bar based on the screen time value
-                    // This assumes the max screen time value is, for example, 10 hours
-                    float barWidth = (screenTime / 10.0f) * 100; // Scale the screen time to percentage
-                    LinearLayout.LayoutParams params = (LinearLayout.LayoutParams) screenTimeBar.getLayoutParams();
-                    params.width = (int) barWidth; // Set the width based on screen time
-                    screenTimeBar.setLayoutParams(params);
 
                     // Add the record view to the container
                     recordsContainer.addView(recordView);

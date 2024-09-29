@@ -25,5 +25,9 @@
         <item name="android:textColorSecondary">@color/app_theme</item>
     </style>
 
+    <style name="TooltipTextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">20sp</item> <!-- Set Font Size -->
+        <item name="android:textColor">@color/white</item> <!-- White Text Color -->
+    </style>
 
 </resources>

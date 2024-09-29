@@ -3,17 +3,21 @@ package com.pytorch.project.gazeguard.parentdashboard;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.os.Handler;
 import android.os.Looper;
+import android.widget.TimePicker;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.TooltipCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.material.slider.Slider;
 import com.google.firebase.database.FirebaseDatabase;
+import com.pytorch.project.gazeguard.common.TooltipFormatter;
 
 import org.pytorch.demo.objectdetection.R;
 
@@ -22,6 +26,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private String uid;
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateTask;
+    TooltipFormatter tooltipFormatter = new TooltipFormatter();
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -73,6 +78,24 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
             }
         });
 
+
+
+        holder.questionMarkSetLimit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tooltipFormatter.setToolTip(holder.itemView.getContext(), v, "Here you can set Screen Time Limit and it Automatically Lock user's device");
+            }
+        });
+        holder.questionMarkSetUnlockTime.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tooltipFormatter.setToolTip(holder.itemView.getContext(), v, "Here you can set schedule when to remove auto lock to user's device");
+            }
+        });
+
+
+
+
         // Set click listener to handle accessibility
         holder.slider.setOnClickListener(v -> {
             v.performClick(); // Call performClick on the Slider view itself
@@ -91,12 +114,21 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         TextView userName;
         TextView setLimitValue;
         Slider slider;
+        TimePicker timePicker;
+
+        ImageView questionMarkSetLimit;
+        ImageView questionMarkSetUnlockTime;
 
         public SetLimitViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.userName);
             setLimitValue = itemView.findViewById(R.id.setLimitValue);
             slider = itemView.findViewById(R.id.slider);
+            timePicker = itemView.findViewById(R.id.timePicker);
+
+            questionMarkSetLimit = itemView.findViewById(R.id.questionMarkSetLimit);
+            questionMarkSetUnlockTime = itemView.findViewById(R.id.questionMarkSetUnlockTime);
         }
     }
+
 }

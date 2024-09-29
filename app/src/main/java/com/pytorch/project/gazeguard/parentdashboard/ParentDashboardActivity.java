@@ -9,6 +9,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
@@ -29,7 +30,7 @@ import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SettingsFra
 
 import org.pytorch.demo.objectdetection.R;
 
-public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener, HomeFragment.OnBackPressedListener {
+public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawerLayout;
     private TextView timeMeasured;
 
@@ -116,28 +117,31 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
 //        parentAdapter.stopListening();
 //    }
 
-    //
-    private boolean doubleBackToExitPressedOnce = false;
+    private long lastBackPressedTime = 0;
+    private static final int DOUBLE_PRESS_INTERVAL = 2000; // 2 seconds
+    @SuppressLint("MissingSuperCall")
     @Override
     public void onBackPressed() {
-//        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-//            drawerLayout.closeDrawer(GravityCompat.START);
-//        } else {
-//            if (doubleBackToExitPressedOnce) {
-//                super.onBackPressed();
-//                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-//                startActivity(intent);
-//                return;
-//            }
-//            this.doubleBackToExitPressedOnce = true;
-//            Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
-//        }
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+
         if (fragment instanceof HomeFragment) {
-            // Handle back press in HomeFragment
-            getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+            long currentTime = System.currentTimeMillis();
+
+            if (currentTime - lastBackPressedTime <= DOUBLE_PRESS_INTERVAL) {
+                // Double-click detected, navigate to ChooseActivity
+                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
+                startActivity(intent);
+                finish();
+            } else {
+                // First press, update last pressed time
+                lastBackPressedTime = currentTime;
+                Toast.makeText(this, "Press again to exit", Toast.LENGTH_SHORT).show();
+            }
         } else {
-            super.onBackPressed();
+            // Replace the current fragment with HomeFragment
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container, new HomeFragment())
+                    .commit();
         }
     }
 

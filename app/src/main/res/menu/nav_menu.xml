@@ -14,7 +14,7 @@
         <item
             android:id="@+id/nav_set_limit"
             android:icon="@drawable/baseline_limit"
-            android:title="Set Limit"/>
+            android:title="Set Limit &amp; Lock"/>
         <item
             android:id="@+id/nav_settings"
             android:icon="@drawable/nav_setting"
