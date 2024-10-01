@@ -35,8 +35,9 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     @Override
     protected void onBindViewHolder(@NonNull SetLimitViewHolder holder, int position, @NonNull ParentModel model) {
         // Clear existing listeners to avoid triggering events from recycled views
-        holder.slider.clearOnChangeListeners();
         holder.timePicker.setOnTimeChangedListener(null);
+        holder.slider.clearOnChangeListeners();
+
 
         holder.userName.setText(model.getName());
 
@@ -44,19 +45,29 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         holder.slider.setValue(model.getScreenTimeLimit());
         holder.screenTimeLimit.setText("Limit: " + model.getScreenTimeLimit() + " Hrs");
 
-        // Set the initial time picker value based on the model
-        String[] unlockTimeParts = model.getDeviceUnlockTime().split("[: ]");
-        int hourOfDay = Integer.parseInt(unlockTimeParts[0]);
-        int minute = Integer.parseInt(unlockTimeParts[1]);
-        String amPm = unlockTimeParts[2];
-        if ("PM".equals(amPm) && hourOfDay != 12) {
-            hourOfDay += 12;
-        } else if ("AM".equals(amPm) && hourOfDay == 12) {
-            hourOfDay = 0;
+        String deviceUnlockTime = model.getDeviceUnlockTime();
+        if (deviceUnlockTime != null) {
+            String[] unlockTimeParts = deviceUnlockTime.split("[: ]");
+            int hourOfDay = Integer.parseInt(unlockTimeParts[0]);
+            int minute = Integer.parseInt(unlockTimeParts[1]);
+            String amPm = unlockTimeParts[2];
+
+            if ("PM".equals(amPm) && hourOfDay != 12) {
+                hourOfDay += 12;
+            } else if ("AM".equals(amPm) && hourOfDay == 12) {
+                hourOfDay = 0;
+            }
+
+            holder.timePicker.setHour(hourOfDay);
+            holder.timePicker.setMinute(minute);
+            holder.deviceUnlockTime.setText("Unlock Time: " + deviceUnlockTime);
+        } else {
+            // Handle the case where deviceUnlockTime is null
+            holder.deviceUnlockTime.setText("Unlock Time: Not Set");
+            holder.timePicker.setHour(0); // Set default time if necessary
+            holder.timePicker.setMinute(0);
         }
-        holder.timePicker.setHour(hourOfDay);
-        holder.timePicker.setMinute(minute);
-        holder.deviceUnlockTime.setText("Unlock Time: " + model.getDeviceUnlockTime());
+
 
 
         // Slider listener

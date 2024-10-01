@@ -43,8 +43,11 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
@@ -85,12 +88,14 @@ public class DetectorService extends Service implements LifecycleOwner{
     private SharedPreferences prefsTimer;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference mDatabase;
+    private DatabaseReference mDatabase, screenTimeLimitRef ;
     private FirebaseFirestore firestore;
 
     private String uid;
     private static final String TIMER_KEY = "timer_seconds";
     private static final String IS_RUNNING_KEY = "is_running";
+
+    private int screenTimeLimitInSeconds;
 
     public DetectorService() {
     }
@@ -136,12 +141,17 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         firestore = FirebaseFirestore.getInstance();
 
-        // Retrieve the childNumber using the utility class
         String childNumber = SharedPrefsUtil.getChildNumber(this);
+
+        // Initialize Firebase Realtime Database reference
         if (currentUser != null) {
             uid = currentUser.getUid();
+            // reference for "ScreenTime"
             mDatabase = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users").child(uid).child("Child").child(childNumber).child("ScreenTime");
+            // reference for "screenTimeLimit"
+            screenTimeLimitRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users").child(uid).child("Child").child(childNumber).child("screenTimeLimit");
         }
 
         context = this;
@@ -175,8 +185,10 @@ public class DetectorService extends Service implements LifecycleOwner{
             // Move the Lifecycle state to STARTED
             mLifecycleRegistry.setCurrentState(Lifecycle.State.STARTED);
             setupCameraX();
-        }, 10000); // Delay before setting up CameraX
+        }, 5000); // Delay before setting up CameraX
 
+
+        fetchScreenTimeLimit();
 
         // Schedule the timer reset at 12 AM
         scheduleTimerReset();
@@ -260,17 +272,22 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         final ArrayList<Result> results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, 0, 0);
 
-        // Log detected classes and scores
-        for (Result result : results) {
-            detectedClassName = PrePostProcessor.mClasses[result.classIndex];
 
-//            Log.d("Object Detection", "Detected class: " + PrePostProcessor.mClasses[result.classIndex] + ", Score: " + result.score);
-//            Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
+//        // Log detected classes and scores
+//        for (Result result : results) {
+//            detectedClassName = PrePostProcessor.mClasses[result.classIndex];
+//
+////            Log.d("Object Detection", "Detected class: " + PrePostProcessor.mClasses[result.classIndex] + ", Score: " + result.score);
+////            Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
+//
+//            eyeTimeTracker();
+//        }
 
-            eyeTimeTracker();
-        }
+        // Process detected results
+        detectedClassName = results.isEmpty() ? "unknown" : PrePostProcessor.mClasses[results.get(0).classIndex];
 
-
+        // Call eyeTimeTracker to check the eye status and update the timer accordingly
+        eyeTimeTracker();
 
         return new EyeTrackerActivity.AnalysisResult(results);
 
@@ -388,6 +405,8 @@ public class DetectorService extends Service implements LifecycleOwner{
 
 
     private void eyeTimeTracker() {
+        Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
+
         if (isLooking() && !isRunning) {
             startTimer();
             isRunning = true;
@@ -396,10 +415,19 @@ public class DetectorService extends Service implements LifecycleOwner{
             pauseTimer();
             isRunning = false;
         }
+
+        if (screenTimeLimitInSeconds > 0) {
+            checkScreenTimeLimit();
+        }
+
     }
 
     private boolean isLooking() {
         switch (detectedClassName) {
+            case "":
+                return false;
+            case "unknown":
+                return false;
             case "not_looking":
                 return false;
             case "closed":
@@ -408,7 +436,6 @@ public class DetectorService extends Service implements LifecycleOwner{
                 return true;
             default:
                 return false;
-
         }
     }
 
@@ -466,5 +493,37 @@ public class DetectorService extends Service implements LifecycleOwner{
         saveTimerState();
         updateNotification("00:00:00");
     }
+
+    private void fetchScreenTimeLimit() {
+        if (screenTimeLimitRef != null) {
+            screenTimeLimitRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        // Fetch the new screen time limit value from Firebase
+                        int screenTimeLimit = snapshot.getValue(Integer.class);
+                        screenTimeLimitInSeconds = screenTimeLimit * 3600;
+                        Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
+                    }
+                }
+
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("Firebase", "Failed to read screen time limit", error.toException());
+                }
+            });
+        }
+    }
+
+
+    private void checkScreenTimeLimit() {
+        if (timerSeconds >= screenTimeLimitInSeconds) {
+            Log.d("Screen time limit", "Time Limit Exceeds" + screenTimeLimitInSeconds + " seconds");
+//            pauseTimer();
+        } else {
+            Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
+        }
+    }
+
 
 }
