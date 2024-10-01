@@ -14,7 +14,7 @@ public class TooltipFormatter {
     public void setToolTip(Context context, View view, String text) {
         Tooltip.make(context,
                 new Tooltip.Builder(101)
-                        .withStyleId(R.style.ToolTipLayoutDefaultStyle)
+                        .withStyleId(R.style.ToolTipLayoutStyle)
                         .anchor(view, Tooltip.Gravity.TOP)
                         .closePolicy(new Tooltip.ClosePolicy()
                                 .insidePolicy(true, false)

@@ -33,13 +33,13 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="5dp"
             android:layout_alignParentTop="true"
-            android:layout_toStartOf="@id/setLimitValue"
+            android:layout_toStartOf="@id/screenTimeLimit"
             android:src="@drawable/question_mark_24"
             android:contentDescription="Question Mark" />
 
         <!-- Screen Time Limit TextView -->
         <TextView
-            android:id="@+id/setLimitValue"
+            android:id="@+id/screenTimeLimit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
@@ -69,13 +69,13 @@
             android:layout_below="@+id/slider"
             android:layout_marginTop="20dp"
             android:layout_marginEnd="5dp"
-            android:layout_toStartOf="@id/setExactTimeValue"
+            android:layout_toStartOf="@id/deviceUnlockTime"
             android:contentDescription="Question Mark"
             android:src="@drawable/question_mark_24"/>
 
         <!-- Set Exact Time TextView -->
         <TextView
-            android:id="@+id/setExactTimeValue"
+            android:id="@+id/deviceUnlockTime"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/slider"
@@ -90,7 +90,7 @@
             android:id="@+id/timePicker"
             android:layout_width="wrap_content"
             android:layout_height="150dp"
-            android:layout_below="@+id/setExactTimeValue"
+            android:layout_below="@+id/deviceUnlockTime"
             android:layout_centerHorizontal="true"
             android:layout_centerVertical="true"
             android:layout_marginTop="10dp"

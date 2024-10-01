@@ -2,16 +2,16 @@ package com.pytorch.project.gazeguard.parentdashboard;
 
 public class ParentModel {
 
-    String ScreenTime, name, surl;
-    int limitValue;
-    ParentModel() {
+    String ScreenTime, name, surl, deviceUnlockTime;
+    int screenTimeLimit;
 
+    ParentModel() {
     }
-    public ParentModel(String name, String ScreenTime, String surl, int limitValue) {
+    public ParentModel(String name, String ScreenTime, String surl, int screenTimeLimit) {
         this.name = name;
         this.ScreenTime = ScreenTime;
         this.surl = surl;
-        this.limitValue = limitValue;
+        this.screenTimeLimit = screenTimeLimit;
     }
 
     public String getName() {
@@ -36,12 +36,19 @@ public class ParentModel {
     }
 
     // Set Limit Value
-    public int getLimitValue() {
-        return limitValue;
+    public int getScreenTimeLimit() {
+        return screenTimeLimit;
     }
-    public void setLimitValue(int limitValue) {
-        this.limitValue = limitValue;
+    public void setScreenTimeLimit(int screenTimeLimit) {
+        this.screenTimeLimit = screenTimeLimit;
     }
 
+    // Set Limit Value
+    public String getDeviceUnlockTime() {
+        return deviceUnlockTime;
+    }
+    public void setDeviceUnlockTime(String deviceUnlockTime) {
+        this.deviceUnlockTime = deviceUnlockTime;
+    }
 
 }
