@@ -40,37 +40,37 @@ public class WelcomeActivity extends AppCompatActivity {
     TextView googleSingin;
 
     // Logged in Result User Info
-    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            new ActivityResultCallback<ActivityResult>() {
-                @Override
-                public void onActivityResult(ActivityResult result) {
-                    if (result.getResultCode() == RESULT_OK) {
-                        Task<GoogleSignInAccount> accountTask = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
-                        try {
-                            GoogleSignInAccount signInAccount = accountTask.getResult(ApiException.class);
-                            AuthCredential authCredential = GoogleAuthProvider.getCredential(signInAccount.getIdToken(), null);
-                            auth.signInWithCredential(authCredential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                    if (task.isSuccessful()) {
-                                        // Start ChooseActivity here
-                                        Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-                                        startActivity(intent);
-                                        finish(); // Finish Welcome activity
-                                    } else {
-                                        Toast.makeText(WelcomeActivity.this, "Failed to sign in: " + task.getException(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                            });
-                        } catch (ApiException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-    );
+//    private final ActivityResultLauncher<Intent> activityResultLauncher = registerForActivityResult(
+//            new ActivityResultContracts.StartActivityForResult(),
+//            new ActivityResultCallback<ActivityResult>() {
+//                @Override
+//                public void onActivityResult(ActivityResult result) {
+//                    if (result.getResultCode() == RESULT_OK) {
+//                        Task<GoogleSignInAccount> accountTask = GoogleSignIn.getSignedInAccountFromIntent(result.getData());
+//                        try {
+//                            GoogleSignInAccount signInAccount = accountTask.getResult(ApiException.class);
+//                            AuthCredential authCredential = GoogleAuthProvider.getCredential(signInAccount.getIdToken(), null);
+//                            auth.signInWithCredential(authCredential).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+//                                @Override
+//                                public void onComplete(@NonNull Task<AuthResult> task) {
+//                                    if (task.isSuccessful()) {
+//                                        // Start ChooseActivity here
+//                                        Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
+//                                        startActivity(intent);
+//                                        finish(); // Finish Welcome activity
+//                                    } else {
+//                                        Toast.makeText(WelcomeActivity.this, "Failed to sign in: " + task.getException(), Toast.LENGTH_SHORT).show();
+//                                    }
+//                                }
+//
+//                            });
+//                        } catch (ApiException e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }
+//            }
+//    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,57 +80,67 @@ public class WelcomeActivity extends AppCompatActivity {
         // FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         setContentView(R.layout.activity_welcome);
-        emailSignin = findViewById(R.id.signInEmail);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Intent intent = new Intent(WelcomeActivity.this, LoginActivity.class);
+                startActivity(intent);
+                finish();
+            }
+        }, 5000);
+
+//        emailSignin = findViewById(R.id.signInEmail);
 
         // Remove or comment out this line as FirebaseApp is initialized automatically
         // FirebaseApp.initializeApp(this);
 
-        GoogleSignInOptions options = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.client_id))
-                .requestEmail()
-                .build();
-        googleSignInClient = GoogleSignIn.getClient(WelcomeActivity.this, options);
+//        GoogleSignInOptions options = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+//                .requestIdToken(getString(R.string.client_id))
+//                .requestEmail()
+//                .build();
+//        googleSignInClient = GoogleSignIn.getClient(WelcomeActivity.this, options);
 
-        auth = FirebaseAuth.getInstance();
+//        auth = FirebaseAuth.getInstance();
 
-        googleSingin = findViewById(R.id.googleSingin);
-        googleSingin.setEnabled(true);
-        googleSingin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = googleSignInClient.getSignInIntent();
-                activityResultLauncher.launch(intent);
-            }
-        });
+//        googleSingin = findViewById(R.id.googleSingin);
+//        googleSingin.setEnabled(true);
+//        googleSingin.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = googleSignInClient.getSignInIntent();
+//                activityResultLauncher.launch(intent);
+//            }
+//        });
 
-        emailSignin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+//        emailSignin.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+//                startActivity(intent);
+//                finish();
+//            }
+//        });
     }
 
-    private boolean doubleBackToExitPressedOnce = false;
-    @Override
-    public void onBackPressed() {
-        if (doubleBackToExitPressedOnce) {
-            super.onBackPressed();
-            // close/exit the app //
-            finishAffinity();
-            return;
-        }
-
-        this.doubleBackToExitPressedOnce = true;
-        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
-
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                doubleBackToExitPressedOnce = false;
-            }
-        }, 2000); // 2 seconds delay before resetting
-    }
+//    private boolean doubleBackToExitPressedOnce = false;
+//    @Override
+//    public void onBackPressed() {
+//        if (doubleBackToExitPressedOnce) {
+//            super.onBackPressed();
+//            // close/exit the app //
+//            finishAffinity();
+//            return;
+//        }
+//
+//        this.doubleBackToExitPressedOnce = true;
+//        Toast.makeText(this, "Please click BACK again to exit", Toast.LENGTH_SHORT).show();
+//
+//        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//            @Override
+//            public void run() {
+//                doubleBackToExitPressedOnce = false;
+//            }
+//        }, 2000); // 2 seconds delay before resetting
+//    }
 }
