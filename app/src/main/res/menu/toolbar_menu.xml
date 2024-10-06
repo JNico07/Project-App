@@ -5,7 +5,7 @@
         android:id="@+id/stop"
         android:title="Stop"/>
     <item
-        android:id="@+id/back"
-        android:title="Back"/>
+        android:id="@+id/exit"
+        android:title="Exit"/>
 
 </menu>

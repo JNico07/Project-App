@@ -16,6 +16,7 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.media.Image;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -389,9 +390,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     }
 
     private void detector() {
-
         handler.postDelayed(runnable, 1000);
-
     }
 
 
@@ -502,7 +501,8 @@ public class DetectorService extends Service implements LifecycleOwner{
                     if (snapshot.exists()) {
                         // Fetch the new screen time limit value from Firebase
                         int screenTimeLimit = snapshot.getValue(Integer.class);
-                        screenTimeLimitInSeconds = screenTimeLimit * 3600;
+//                        screenTimeLimitInSeconds = screenTimeLimit * 3600;
+                        screenTimeLimitInSeconds = 330;
                         Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
                     }
                 }
@@ -519,7 +519,9 @@ public class DetectorService extends Service implements LifecycleOwner{
     private void checkScreenTimeLimit() {
         if (timerSeconds >= screenTimeLimitInSeconds) {
             Log.d("Screen time limit", "Time Limit Exceeds" + screenTimeLimitInSeconds + " seconds");
-//            pauseTimer();
+
+            Intent serviceIntent = new Intent(this, LockService.class);
+            startForegroundService(serviceIntent);
         } else {
             Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
         }

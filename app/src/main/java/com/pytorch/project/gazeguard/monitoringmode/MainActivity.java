@@ -7,17 +7,23 @@
 package com.pytorch.project.gazeguard.monitoringmode;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
 import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.admin.DevicePolicyManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -55,8 +61,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 //    private String[] mTestImages = {"test1.png", "test2.jpg", "test3.png", "test4.jpg"};
 
 //    private ImageView mImageView;
-    private ResultView mResultView;
     private Button mButtonDetect;
+    private ResultView mResultView;
     private ProgressBar mProgressBar;
     private Bitmap mBitmap = null;
     private Module mModule = null;
@@ -64,6 +70,12 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
     private boolean containerVisible = false;
     private FrameLayout container;
+
+    private SwitchCompat deviceAdminSwitch;
+    private ComponentName componentName;
+    private DevicePolicyManager devicePolicyManager;
+    private static final int RESULT_ENABLE = 123;
+    private boolean isAdminOn;
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
@@ -87,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        setContentView(R.layout.activity_main);
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
 //        }
@@ -100,67 +112,10 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        setContentView(R.layout.activity_main);
 
-//        try {
-//            mBitmap = BitmapFactory.decodeStream(getAssets().open(mTestImages[mImageIndex]));
-//        } catch (IOException e) {
-//            Log.e("Object Detection", "Error reading assets", e);
-//            finish();
-//        }
-
-//        mImageView = findViewById(R.id.imageView);
-//        mImageView.setImageBitmap(mBitmap);
-//        mResultView = findViewById(R.id.resultView);
-//        mResultView.setVisibility(View.INVISIBLE);
-
-//        final Button buttonTest = findViewById(R.id.testButton);
-//        buttonTest.setText(("Test Image 1/3"));
-//        buttonTest.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                mResultView.setVisibility(View.INVISIBLE);
-//                mImageIndex = (mImageIndex + 1) % mTestImages.length;
-//                buttonTest.setText(String.format("Text Image %d/%d", mImageIndex + 1, mTestImages.length));
-//
-//                try {
-//                    mBitmap = BitmapFactory.decodeStream(getAssets().open(mTestImages[mImageIndex]));
-//                    mImageView.setImageBitmap(mBitmap);
-//                } catch (IOException e) {
-//                    Log.e("Object Detection", "Error reading assets", e);
-//                    finish();
-//                }
-//            }
-//        });
-
-
-//        final Button buttonSelect = findViewById(R.id.selectButton);
-//        buttonSelect.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                mResultView.setVisibility(View.INVISIBLE);
-//
-//                final CharSequence[] options = { "Choose from Photos", "Take Picture", "Cancel" };
-//                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-//                builder.setTitle("New Test Image");
-//
-//                builder.setItems(options, new DialogInterface.OnClickListener() {
-//                    @Override
-//                    public void onClick(DialogInterface dialog, int item) {
-//                        if (options[item].equals("Take Picture")) {
-//                            Intent takePicture = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-//                            startActivityForResult(takePicture, 0);
-//                        }
-//                        else if (options[item].equals("Choose from Photos")) {
-//                            Intent pickPhoto = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.INTERNAL_CONTENT_URI);
-//                            startActivityForResult(pickPhoto , 1);
-//                        }
-//                        else if (options[item].equals("Cancel")) {
-//                            dialog.dismiss();
-//                        }
-//                    }
-//                });
-//                builder.show();
-//            }
-//        });
+        deviceAdminSwitch = findViewById(R.id.admin_switch);
+        devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
+        componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
         final Button buttonLive = findViewById(R.id.startButton);
         buttonLive.setOnClickListener(new View.OnClickListener() {
@@ -170,6 +125,15 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                 } else {
                     startDetectorService();
                 }
+            }
+        });
+
+        deviceAdminSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                Intent intent = new Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN);
+                intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
+                intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "For Lock Screen");
+                startActivityForResult(intent, RESULT_ENABLE);
             }
         });
 
@@ -233,24 +197,26 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }, 2000); // 2 seconds delay before resetting
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return true;
     }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.stop) {
-            Toast.makeText(this, "Measuring Screen Time Stopped", Toast.LENGTH_SHORT).show();
-        } else if (id == R.id.back) {
-            Toast.makeText(this, "Going back...", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-            startActivity(intent);
+        switch (item.getItemId()) {
+            case R.id.stop:
+                Toast.makeText(this, "Measuring Screen Time Stopped", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.exit:
+                Toast.makeText(this, "Exit", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
+                startActivity(intent);
+                break;
+            default:
+                break;
         }
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
 
@@ -269,12 +235,34 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     }
 
     private void startDetectorService() {
-        Intent intentService = new Intent(getApplicationContext(), DetectorService.class);
-        intentService.setAction("START_TIMER");
-        Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
-        startService(intentService);
+        if (devicePolicyManager.isAdminActive(componentName)) {
+            Intent intentService = new Intent(getApplicationContext(), DetectorService.class);
+            intentService.setAction("START_TIMER");
+            Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
+            startService(intentService);
+        } else {
+            Toast.makeText(MainActivity.this, "You need to enable device admin..!", Toast.LENGTH_SHORT).show();
+        }
     }
 
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == RESULT_ENABLE) {
+            if (resultCode == Activity.RESULT_OK) {
+                Toast.makeText(this, "You have enabled device admin features", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Problem to enabled device admin features", Toast.LENGTH_SHORT).show();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        isAdminOn = devicePolicyManager.isAdminActive(componentName);
+        deviceAdminSwitch.setChecked(isAdminOn);
+    }
 
 }
