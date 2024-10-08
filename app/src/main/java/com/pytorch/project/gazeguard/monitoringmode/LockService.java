@@ -19,8 +19,8 @@ import androidx.core.app.NotificationCompat;
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
-    private static final long LOCK_DURATION = 15000; // Lock every 5 seconds
-    private static final long TOTAL_DURATION = 120000; // Run for 20 seconds
+    private static final long LOCK_DURATION = 10000; // Lock every #
+    private static final long TOTAL_DURATION = 120000; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
     private Handler handler;

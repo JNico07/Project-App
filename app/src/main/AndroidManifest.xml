@@ -41,7 +41,6 @@
             android:exported="false" />
         <activity
             android:name="com.pytorch.project.gazeguard.common.WelcomeActivity"
-            android:configChanges="orientation"
             android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>

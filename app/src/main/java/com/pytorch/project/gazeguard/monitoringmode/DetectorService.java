@@ -192,7 +192,7 @@ public class DetectorService extends Service implements LifecycleOwner{
         fetchScreenTimeLimit();
 
         // Schedule the timer reset at 12 AM
-        scheduleTimerReset();
+//        scheduleTimerReset();
 
     }
 
@@ -440,8 +440,8 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private void scheduleTimerReset() {
         Calendar calendar = Calendar.getInstance();
-        calendar.set(Calendar.HOUR_OF_DAY, 14);
-        calendar.set(Calendar.MINUTE, 14);
+        calendar.set(Calendar.HOUR_OF_DAY, 16);
+        calendar.set(Calendar.MINUTE, 46);
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
 
@@ -500,9 +500,13 @@ public class DetectorService extends Service implements LifecycleOwner{
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     if (snapshot.exists()) {
                         // Fetch the new screen time limit value from Firebase
-                        int screenTimeLimit = snapshot.getValue(Integer.class);
-//                        screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                        screenTimeLimitInSeconds = 330;
+                        Integer screenTimeLimit = snapshot.getValue(Integer.class);
+                        if (screenTimeLimit != null) {
+//                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
+                            screenTimeLimitInSeconds = 20;
+                        } else {
+                            screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
+                        }
                         Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
                     }
                 }
@@ -516,14 +520,20 @@ public class DetectorService extends Service implements LifecycleOwner{
     }
 
 
+    Intent intentLockService;
     private void checkScreenTimeLimit() {
         if (timerSeconds >= screenTimeLimitInSeconds) {
             Log.d("Screen time limit", "Time Limit Exceeds" + screenTimeLimitInSeconds + " seconds");
+            pauseTimer();
+            resetTimer();
 
-            Intent serviceIntent = new Intent(this, LockService.class);
-            startForegroundService(serviceIntent);
+            intentLockService = new Intent(this, LockService.class);
+            startForegroundService(intentLockService);
         } else {
             Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
+            if (intentLockService != null) {
+                stopService(intentLockService);
+            }
         }
     }
 
