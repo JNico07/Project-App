@@ -207,6 +207,12 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         if (intent != null) {
             String action = intent.getAction();
+            if ("STOP_CAMERA".equals(action)) {
+                stopCameraX();
+                pauseTimer();
+            } else if ("START_CAMERA".equals(action)) {
+                setupCameraX();
+            }
             if ("START_TIMER".equals(action)) {
                 handler.postDelayed(this::setupCameraX, 5000); // delay
             } else if ("PAUSE_TIMER".equals(action)) {
@@ -327,6 +333,15 @@ public class DetectorService extends Service implements LifecycleOwner{
             handler.postDelayed(this::setupCameraX, 10000); // Retry in 10 seconds
         }
     }
+    private void stopCameraX() {
+        try {
+            CameraX.unbindAll();
+            Log.d("CameraX", "CameraX stopped successfully.");
+        } catch (Exception e) {
+            Log.e("CameraX", "Error stopping CameraX", e);
+        }
+    }
+
 
 
     private void startTimer() {
@@ -503,7 +518,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
 //                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                            screenTimeLimitInSeconds = 20;
+                            screenTimeLimitInSeconds = 5;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }

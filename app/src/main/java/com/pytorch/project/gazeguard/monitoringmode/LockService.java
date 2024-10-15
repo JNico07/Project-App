@@ -7,8 +7,8 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
@@ -20,18 +20,24 @@ public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
     private static final long LOCK_DURATION = 10000; // Lock every #
-    private static final long TOTAL_DURATION = 120000; // Run for # seconds
+    private static final long TOTAL_DURATION = 30000; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
     private Handler handler;
     private Runnable lockRunnable;
     private CountDownTimer countDownTimer;
+    private Context context;
+    Intent controlDetectorServiceIntent;
 
     private static final long INITIAL_DELAY = 20000;
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        controlDetectorServiceIntent = new Intent(this, DetectorService.class);
+        controlDetectorServiceIntent.setAction("STOP_CAMERA");
+        startService(controlDetectorServiceIntent);
 
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
@@ -70,6 +76,10 @@ public class LockService extends Service {
 
             @Override
             public void onFinish() {
+                controlDetectorServiceIntent.setAction("START_CAMERA");
+                startService(controlDetectorServiceIntent);
+
+                Toast.makeText(LockService.this, "LockService finished", Toast.LENGTH_SHORT).show();
                 stopSelf(); // Stop the service once finished
             }
         }.start();
@@ -108,16 +118,14 @@ public class LockService extends Service {
     }
 
     private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel serviceChannel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Lock Service Channel",
-                    NotificationManager.IMPORTANCE_DEFAULT
-            );
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) {
-                manager.createNotificationChannel(serviceChannel);
-            }
+        NotificationChannel serviceChannel = new NotificationChannel(
+                CHANNEL_ID,
+                "Lock Service Channel",
+                NotificationManager.IMPORTANCE_DEFAULT
+        );
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager != null) {
+            manager.createNotificationChannel(serviceChannel);
         }
     }
 }
