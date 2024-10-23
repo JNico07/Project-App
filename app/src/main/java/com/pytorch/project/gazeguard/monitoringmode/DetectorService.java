@@ -89,7 +89,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     private SharedPreferences prefsTimer;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference mDatabase, screenTimeLimitRef ;
+    private DatabaseReference mDatabase, screenTimeLimitRef, deviceUnlockTime ;
     private FirebaseFirestore firestore;
 
     private String uid;
@@ -97,6 +97,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     private static final String IS_RUNNING_KEY = "is_running";
 
     private int screenTimeLimitInSeconds;
+    private String unlockTime;
 
     public DetectorService() {
     }
@@ -127,7 +128,6 @@ public class DetectorService extends Service implements LifecycleOwner{
         if (mDatabase != null) {
             mDatabase.setValue(time); // Store the formatted time
         }
-
     }
 
     @Override
@@ -153,6 +153,10 @@ public class DetectorService extends Service implements LifecycleOwner{
             // reference for "screenTimeLimit"
             screenTimeLimitRef = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users").child(uid).child("Child").child(childNumber).child("screenTimeLimit");
+            // reference for "deviceUnlockTime"
+            deviceUnlockTime = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users").child(uid).child("Child").child(childNumber).child("deviceUnlockTime");
+
         }
 
         context = this;
@@ -190,10 +194,10 @@ public class DetectorService extends Service implements LifecycleOwner{
 
 
         fetchScreenTimeLimit();
+        fetchDeviceUnlockTime();
 
         // Schedule the timer reset at 12 AM
 //        scheduleTimerReset();
-
     }
 
     //    private int retryCount = 0;
@@ -501,13 +505,29 @@ public class DetectorService extends Service implements LifecycleOwner{
 //                    .addOnSuccessListener(aVoid -> Log.d("Firestore", "Screen time data successfully written!"))
 //                    .addOnFailureListener(e -> Log.w("Firestore", "Error writing screen time data", e));
         }
-
         // Reset the timer
         timerSeconds = 0;
         saveTimerState();
         updateNotification("00:00:00");
     }
 
+    private void fetchDeviceUnlockTime() {
+        if (deviceUnlockTime != null) {
+            deviceUnlockTime.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        unlockTime = snapshot.getValue(String.class);
+                        Log.d("Firebase", "Device unlock time: " + unlockTime);
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("Firebase", "Failed to read device unlock time", error.toException());
+                }
+            });
+        }
+    }
     private void fetchScreenTimeLimit() {
         if (screenTimeLimitRef != null) {
             screenTimeLimitRef.addValueEventListener(new ValueEventListener() {
@@ -517,15 +537,14 @@ public class DetectorService extends Service implements LifecycleOwner{
                         // Fetch the new screen time limit value from Firebase
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
-//                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                            screenTimeLimitInSeconds = 5;
+                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
+//                            screenTimeLimitInSeconds = 5;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
                         Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
                     }
                 }
-
                 @Override
                 public void onCancelled(@NonNull DatabaseError error) {
                     Log.e("Firebase", "Failed to read screen time limit", error.toException());
@@ -538,19 +557,20 @@ public class DetectorService extends Service implements LifecycleOwner{
     Intent intentLockService;
     private void checkScreenTimeLimit() {
         if (timerSeconds >= screenTimeLimitInSeconds) {
-            Log.d("Screen time limit", "Time Limit Exceeds" + screenTimeLimitInSeconds + " seconds");
+            Log.d("Screen time limit", "Time Limit Exceeds " + screenTimeLimitInSeconds + " seconds");
             pauseTimer();
             resetTimer();
 
-            intentLockService = new Intent(this, LockService.class);
-            startForegroundService(intentLockService);
+            // Create intent for LockService
+            intentLockService = new Intent(context, LockService.class);
+            intentLockService.putExtra("UNLOCK_TIME", unlockTime);  // Pass unlock time to LockService
+            startForegroundService(intentLockService);  // Start the LockService in the foreground
         } else {
             Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
             if (intentLockService != null) {
-                stopService(intentLockService);
+                stopService(intentLockService);  // Stop the LockService if it exists
+                intentLockService = null; // Clear the reference
             }
         }
     }
-
-
 }
