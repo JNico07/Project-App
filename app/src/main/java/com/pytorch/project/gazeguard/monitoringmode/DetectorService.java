@@ -70,6 +70,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 public class DetectorService extends Service implements LifecycleOwner{
 
@@ -211,17 +212,26 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         if (intent != null) {
             String action = intent.getAction();
-            if ("STOP_CAMERA".equals(action)) {
-                stopCameraX();
-                pauseTimer();
-            } else if ("START_CAMERA".equals(action)) {
-                setupCameraX();
+            switch (Objects.requireNonNull(action)) {
+                case "STOP_CAMERA":
+                    stopCameraX();
+                    break;
+                case "START_CAMERA":
+                    setupCameraX();
+                    break;
             }
-            if ("START_TIMER".equals(action)) {
-                handler.postDelayed(this::setupCameraX, 5000); // delay
-            } else if ("PAUSE_TIMER".equals(action)) {
-                pauseTimer();
-            }
+
+//            if ("STOP_CAMERA".equals(action)) {
+//                stopCameraX();
+//                pauseTimer();
+//            } else if ("START_CAMERA".equals(action)) {
+//                setupCameraX();
+//            }
+//            if ("START_TIMER".equals(action)) {
+//                handler.postDelayed(this::setupCameraX, 5000); // delay
+//            } else if ("PAUSE_TIMER".equals(action)) {
+//                pauseTimer();
+//            }
         }
         return START_STICKY;
     }
@@ -367,6 +377,14 @@ public class DetectorService extends Service implements LifecycleOwner{
             saveTimerState();
         }
     }
+    private void stopTimer() {
+        handler.removeCallbacks(runnable); // Remove any pending callbacks
+        timerSeconds = 0; // Reset timer seconds
+        isRunning = false; // Update the running state
+        saveTimerState(); // Save the state
+        updateNotification("00:00:00"); // Update the notification to show reset time
+    }
+
 
     private void saveTimerState() {
         SharedPreferences.Editor editor = prefsTimer.edit();
@@ -537,8 +555,8 @@ public class DetectorService extends Service implements LifecycleOwner{
                         // Fetch the new screen time limit value from Firebase
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
-                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-//                            screenTimeLimitInSeconds = 5;
+//                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
+                            screenTimeLimitInSeconds = 5;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
@@ -558,6 +576,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     private void checkScreenTimeLimit() {
         if (timerSeconds >= screenTimeLimitInSeconds) {
             Log.d("Screen time limit", "Time Limit Exceeds " + screenTimeLimitInSeconds + " seconds");
+            Log.d("Unlock Time", "Device Unlock Time: " + unlockTime);
             pauseTimer();
             resetTimer();
 
@@ -567,6 +586,7 @@ public class DetectorService extends Service implements LifecycleOwner{
             startForegroundService(intentLockService);  // Start the LockService in the foreground
         } else {
             Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
+            Log.d("Unlock Time", "Device Unlock Time: " + unlockTime);
             if (intentLockService != null) {
                 stopService(intentLockService);  // Stop the LockService if it exists
                 intentLockService = null; // Clear the reference
