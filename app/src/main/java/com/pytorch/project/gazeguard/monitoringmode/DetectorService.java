@@ -215,8 +215,11 @@ public class DetectorService extends Service implements LifecycleOwner{
             switch (Objects.requireNonNull(action)) {
                 case "STOP_CAMERA":
                     stopCameraX();
+                    pauseTimer();
+                    stopTimer();
                     break;
                 case "START_CAMERA":
+                    updateNotification("00:00:00");
                     setupCameraX();
                     break;
             }
@@ -382,7 +385,7 @@ public class DetectorService extends Service implements LifecycleOwner{
         timerSeconds = 0; // Reset timer seconds
         isRunning = false; // Update the running state
         saveTimerState(); // Save the state
-        updateNotification("00:00:00"); // Update the notification to show reset time
+        updateNotification("Screen Time Limit Exceeded"); // Update the notification to show reset time
     }
 
 
@@ -414,16 +417,6 @@ public class DetectorService extends Service implements LifecycleOwner{
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .build();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        isDestroyed = true;
-        Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
-
-        // Set the Lifecycle state to DESTROYED
-        mLifecycleRegistry.setCurrentState(Lifecycle.State.DESTROYED);
     }
 
     private void detector() {
@@ -592,5 +585,58 @@ public class DetectorService extends Service implements LifecycleOwner{
                 intentLockService = null; // Clear the reference
             }
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        isDestroyed = true;
+        Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
+
+        // Stop the camera
+        stopCameraX();
+
+        // Clean up timer-related resources
+        handler.removeCallbacks(runnable);
+        saveTimerState();
+
+        // Clean up background thread
+        if (mBackgroundThread != null) {
+            mBackgroundThread.quitSafely();
+            try {
+                mBackgroundThread.join();
+                mBackgroundThread = null;
+                mBackgroundHandler = null;
+            } catch (InterruptedException e) {
+                Log.e("DetectorService", "Error shutting down background thread", e);
+            }
+        }
+
+        // Clean up Firebase listeners if they exist
+        if (screenTimeLimitRef != null) {
+            screenTimeLimitRef.removeEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {}
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+        }
+        if (deviceUnlockTime != null) {
+            deviceUnlockTime.removeEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {}
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {}
+            });
+        }
+
+        // Clean up ML model
+        if (mModule != null) {
+            mModule.destroy();
+            mModule = null;
+        }
+
+        // Set the Lifecycle state to DESTROYED
+        mLifecycleRegistry.setCurrentState(Lifecycle.State.DESTROYED);
     }
 }

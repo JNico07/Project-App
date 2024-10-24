@@ -12,15 +12,22 @@ import android.content.Intent;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Locale;
 
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
     private static final long LOCK_DURATION = 10000; // Lock every #
-    private static final long TOTAL_DURATION = 30000; // Run for # seconds
+    private static long TOTAL_DURATION = 30000; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
     private Handler handler;
@@ -29,7 +36,11 @@ public class LockService extends Service {
     private Context context;
     Intent controlDetectorServiceIntent;
 
-    private static final long INITIAL_DELAY = 20000;
+    private static final long DELAY = 5000;
+
+    private String unlockTime;
+    private DateTimeFormatter formatterTime;
+    private LocalTime currentLocalTime, timeUnlockDevice;
 
     @Override
     public void onCreate() {
@@ -39,55 +50,126 @@ public class LockService extends Service {
         controlDetectorServiceIntent.setAction("STOP_CAMERA");
         startService(controlDetectorServiceIntent);
 
+        formatterTime = DateTimeFormatter.ofPattern("h:mm a").withLocale(Locale.US);
+
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
-        Toast.makeText(this, "LockService started", Toast.LENGTH_SHORT).show();
-
         handler = new Handler();
-        lockRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (devicePolicyManager.isAdminActive(componentName)) {
-                    devicePolicyManager.lockNow();
-                    handler.postDelayed(this, LOCK_DURATION);
-                }
-            }
-        };
-        // Start the locking process with a delay
+//        lockRunnable = new Runnable() {
+//            @Override
+//            public void run() {
+//                if (devicePolicyManager.isAdminActive(componentName)) {
+//                    devicePolicyManager.lockNow();
+//                }
+//            }
+//        };
+        // Start the locking process
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 startLockingProcess();
             }
-        }, INITIAL_DELAY); // 10 seconds delay before first lock
+        }, DELAY);
+
+        startUpdatingCurrentLocalTime();
     }
 
     private void startLockingProcess() {
-        // Start a CountDownTimer for the total duration
-        countDownTimer = new CountDownTimer(TOTAL_DURATION, LOCK_DURATION) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                // Lock the device every 5 seconds
-                if (devicePolicyManager.isAdminActive(componentName)) {
-                    devicePolicyManager.lockNow();
-                }
-            }
+        currentLocalTime = parseCurrentLocalTime();
 
+        Log.d("LockService", "Current Time: " + currentLocalTime);
+        Log.d("LockService", "Time Unlock Device: " + timeUnlockDevice);
+
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onFinish() {
-                controlDetectorServiceIntent.setAction("START_CAMERA");
+            public void run() {
+                if (shouldUnlockDevice()) {
+                    Log.d("LockService", "Device unlocking...");
+                    stopSelf();
+                } else if (shouldLockDevice()) {
+                    lockDevice();
+                    Log.d("LockService", "Device locked");
+                }
+                handler.postDelayed(this, 10000);
+            }
+        }, 10000); // Initial delay
+    }
+    private LocalTime parseCurrentLocalTime() {
+        try {
+            return LocalTime.parse(getCurrentLocalTime(), formatterTime);
+        } catch (DateTimeParseException e) {
+            Log.e("LockService", "Failed to parse current time", e);
+            return LocalTime.now(); // Set default value or handle the error
+        }
+    }
+    private boolean shouldLockDevice() {
+        return currentLocalTime.isBefore(timeUnlockDevice);
+    }
+    private void lockDevice() {
+        if (devicePolicyManager.isAdminActive(componentName)) {
+            try {
+                // Simply lock the device - calls will still be receivable by default
+                devicePolicyManager.lockNow();
+
+                // Stop camera service
+                controlDetectorServiceIntent.setAction("STOP_CAMERA");
                 startService(controlDetectorServiceIntent);
 
-                Toast.makeText(LockService.this, "LockService finished", Toast.LENGTH_SHORT).show();
-                stopSelf(); // Stop the service once finished
+                Toast.makeText(this, "Device locked - Calls are still receivable", Toast.LENGTH_SHORT).show();
+                Log.d("LockService", "Device locked successfully");
+            } catch (Exception e) {
+                Log.e("LockService", "Error locking device: " + e.getMessage());
+                Toast.makeText(this, "Failed to lock device", Toast.LENGTH_SHORT).show();
             }
-        }.start();
+        } else {
+            Log.w("LockService", "Device admin is not active");
+            Toast.makeText(this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
+        }
+    }
+    private boolean shouldUnlockDevice() {
+        return timeUnlockDevice != null && !currentLocalTime.isBefore(timeUnlockDevice);
+    }
+    private void startUpdatingCurrentLocalTime() {
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    currentLocalTime = LocalTime.parse(getCurrentLocalTime(), formatterTime);
+                    Log.d("LockService", "Updated Current Time: " + currentLocalTime);
+                } catch (DateTimeParseException e) {
+                    Log.e("LockService", "Failed to parse current time", e);
+                    currentLocalTime = LocalTime.now(); // Fallback to now if parsing fails
+                }
+
+                handler.postDelayed(this, 30000);
+            }
+        }, 30000);
+    }
+    private String getCurrentLocalTime() {
+        LocalDateTime now = LocalDateTime.now();
+        return now.format(formatterTime);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
+
+        // Fetch the unlock time from the intent (sent by DetectorService)
+        if (intent != null) {
+            unlockTime = intent.getStringExtra("UNLOCK_TIME");
+            if (unlockTime != null && !unlockTime.isEmpty()) {
+                try {
+                    timeUnlockDevice = LocalTime.parse(unlockTime, formatterTime);
+                } catch (DateTimeParseException e) {
+                    Log.e("LockService", "Failed to parse unlock time: " + unlockTime, e);
+                }
+            } else {
+                Log.d("LockService", "No unlock time provided");
+            }
+        }
+
+
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -101,16 +183,6 @@ public class LockService extends Service {
 
         return START_STICKY;
     }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        handler.removeCallbacks(lockRunnable);
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
-    }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -128,4 +200,53 @@ public class LockService extends Service {
             manager.createNotificationChannel(serviceChannel);
         }
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        // Stop any pending callbacks or timers
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;  // Clear the reference
+        }
+
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;  // Clear the reference
+        }
+
+        // Clean up device policy manager
+        if (devicePolicyManager != null) {
+            devicePolicyManager = null;
+        }
+        componentName = null;
+
+        // Clean up context reference
+        context = null;
+
+        // Restart DetectorService or any other cleanup action
+        if (controlDetectorServiceIntent != null) {
+            controlDetectorServiceIntent.setAction("START_CAMERA");
+            startService(controlDetectorServiceIntent);
+            controlDetectorServiceIntent = null;  // Clear the reference
+        }
+
+        // Remove the ongoing notification
+        NotificationManager notificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (notificationManager != null) {
+            notificationManager.cancel(1);  // Use the same notification ID used in startForeground
+        }
+        stopForeground(true);
+
+        // Log cleanup
+        Log.d("LockService", "Device Unlocked!");
+        Toast.makeText(getApplicationContext(), "Locking Device Finished!", Toast.LENGTH_LONG).show();
+    }
 }
+
+
+
+
+
