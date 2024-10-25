@@ -1,5 +1,6 @@
 package com.pytorch.project.gazeguard.parentdashboard.childdatafragment;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,9 +21,11 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.github.mikephil.charting.utils.ColorTemplate;
 import com.pytorch.project.gazeguard.common.DateValueFormatter;
 
+import org.angmarch.views.NiceSpinner;
 import org.pytorch.demo.objectdetection.R;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -59,6 +62,10 @@ public class ChildDataFragment extends Fragment {
         TextView childNameTextView = view.findViewById(R.id.childNameTextView);
         LinearLayout recordsContainer = view.findViewById(R.id.recordsContainer);
         LineChart screenTimeChart = view.findViewById(R.id.screenTimeChart);
+
+        List<String> years = Arrays.asList("2024", "2023", "2022");
+        NiceSpinner yearSpinner = view.findViewById(R.id.yearSpinner);
+        yearSpinner.attachDataSource(years);
 
         if (getArguments() != null) {
             String childName = getArguments().getString(ARG_CHILD_NAME);
@@ -106,8 +113,8 @@ public class ChildDataFragment extends Fragment {
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
 
                     // Set the date and formatted screen time
-                    dateTextView.setText("Date: " + date);
-                    screenTimeTextView.setText("Screen Time: " + formatScreenTime(screenTime));
+                    dateTextView.setText(date);
+                    screenTimeTextView.setText(formatScreenTime(screenTime));
 
                     // Add the record view to the container
                     recordsContainer.addView(recordView);

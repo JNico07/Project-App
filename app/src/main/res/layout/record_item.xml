@@ -4,35 +4,30 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <!-- Top border -->
-<!--    <View-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="1dp"-->
-<!--        android:background="@android:color/darker_gray" />-->
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="18dp">
+        android:gravity="center"
+        android:padding="15dp">
 
-        <!-- Date on the left -->
         <TextView
             android:id="@+id/dateTextView"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Date:"
-            android:textSize="16sp" />
+            android:text="Date"
+            android:textSize="16sp"
+            android:gravity="center"/>
 
-        <!-- Screen Time on the right -->
         <TextView
             android:id="@+id/screenTimeTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Screen Time:"
+            android:layout_weight="1"
+            android:text="Screen Time"
             android:textSize="16sp"
-            android:gravity="end" />
+            android:gravity="center" />
     </LinearLayout>
 
     <!-- Bottom border -->
