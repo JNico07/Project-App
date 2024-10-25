@@ -1,6 +1,7 @@
 package com.pytorch.project.gazeguard.parentdashboard.childdatafragment;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,6 +25,12 @@ import org.pytorch.demo.objectdetection.R;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import java.text.SimpleDateFormat;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.Locale;
 
 public class ChildDataFragment extends Fragment {
 
@@ -60,6 +67,24 @@ public class ChildDataFragment extends Fragment {
             childNameTextView.setText(childName);
 
             if (childDataList != null) {
+                // Sort the childDataList by date in order
+                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                childDataList.sort(new Comparator<Map<String, Object>>() {
+                    @Override
+                    public int compare(Map<String, Object> record1, Map<String, Object> record2) {
+                        try {
+                            Date date1 = dateFormat.parse((String) record1.get("date"));
+                            Date date2 = dateFormat.parse((String) record2.get("date"));
+                            assert date2 != null;
+//                            return date1.compareTo(date2); // Ascending order
+                            return date2.compareTo(date1); // Descending  order
+                        } catch (Exception e) {
+                            Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
+                        }
+                        return 0;
+                    }
+                });
+
                 List<Entry> entries = new ArrayList<>();
                 List<String> dates = new ArrayList<>(); // List to store date strings
 
@@ -79,7 +104,6 @@ public class ChildDataFragment extends Fragment {
 
                     TextView dateTextView = recordView.findViewById(R.id.dateTextView);
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
-//                    View screenTimeBar = recordView.findViewById(R.id.screenTimeBar);
 
                     // Set the date and formatted screen time
                     dateTextView.setText("Date: " + date);
@@ -99,7 +123,7 @@ public class ChildDataFragment extends Fragment {
 
                 // Configure XAxis
                 XAxis xAxis = screenTimeChart.getXAxis();
-                xAxis.setPosition(XAxis.XAxisPosition.TOP); // Better visibility at the bottom
+                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Better visibility at the bottom
                 xAxis.setGranularity(1f); // Allow intervals of 1 between values
                 xAxis.setLabelCount(5, true); // Set a smaller label count, adjust as needed
                 xAxis.setValueFormatter(new DateValueFormatter(dates)); // Set custom date formatter
@@ -125,3 +149,4 @@ public class ChildDataFragment extends Fragment {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
+
