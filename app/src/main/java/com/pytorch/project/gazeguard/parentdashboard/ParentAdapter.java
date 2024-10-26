@@ -68,8 +68,6 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                 String uid = currentUser.getUid();
                 String childUserName = parentModel.getName();
 
-                String currentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-
                 DatabaseReference childDatabase = FirebaseDatabase.getInstance().getReference()
                         .child("Registered Users").child(uid).child("Child");
 
@@ -84,8 +82,6 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                             firestore.collection("ScreenTimeRecords")
                                     .document(uid)
                                     .collection(childUserName)
-                                    .whereGreaterThanOrEqualTo("date", dateCreated) // read data from Date Created
-                                    .whereLessThanOrEqualTo("date", "2025-01-01")   // to Current Date
                                     .get()
                                     .addOnSuccessListener(queryDocumentSnapshots -> {
 

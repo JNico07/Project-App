@@ -26,6 +26,7 @@ import org.pytorch.demo.objectdetection.R;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Set;
 
 public class ChildDataFragment extends Fragment {
 
@@ -62,10 +64,7 @@ public class ChildDataFragment extends Fragment {
         TextView childNameTextView = view.findViewById(R.id.childNameTextView);
         LinearLayout recordsContainer = view.findViewById(R.id.recordsContainer);
         LineChart screenTimeChart = view.findViewById(R.id.screenTimeChart);
-
-        List<String> years = Arrays.asList("2024", "2023", "2022");
         NiceSpinner yearSpinner = view.findViewById(R.id.yearSpinner);
-        yearSpinner.attachDataSource(years);
 
         if (getArguments() != null) {
             String childName = getArguments().getString(ARG_CHILD_NAME);
@@ -74,74 +73,68 @@ public class ChildDataFragment extends Fragment {
             childNameTextView.setText(childName);
 
             if (childDataList != null) {
-                // Sort the childDataList by date in order
+                // Set for unique years
+                Set<String> uniqueYears = new HashSet<>();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-                childDataList.sort(new Comparator<Map<String, Object>>() {
-                    @Override
-                    public int compare(Map<String, Object> record1, Map<String, Object> record2) {
-                        try {
-                            Date date1 = dateFormat.parse((String) record1.get("date"));
-                            Date date2 = dateFormat.parse((String) record2.get("date"));
-                            assert date2 != null;
-//                            return date1.compareTo(date2); // Ascending order
-                            return date2.compareTo(date1); // Descending  order
-                        } catch (Exception e) {
-                            Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
-                        }
-                        return 0;
+
+                // Sort the childDataList by date in descending order
+                childDataList.sort((record1, record2) -> {
+                    try {
+                        Date date1 = dateFormat.parse((String) record1.get("date"));
+                        Date date2 = dateFormat.parse((String) record2.get("date"));
+                        return date2.compareTo(date1); // Descending order
+                    } catch (Exception e) {
+                        Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
                     }
+                    return 0;
                 });
 
                 List<Entry> entries = new ArrayList<>();
-                List<String> dates = new ArrayList<>(); // List to store date strings
+                List<String> dates = new ArrayList<>();
 
                 for (int i = 0; i < childDataList.size(); i++) {
                     Map<String, Object> record = childDataList.get(i);
                     String date = (String) record.get("date");
                     float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
 
-                    // Add the date to the dates list
-                    dates.add(date);
+                    // Extract year and add to unique years set
+                    String year = date.substring(0, 4);
+                    uniqueYears.add(year);
 
                     // Add data entries (index, screenTime)
                     entries.add(new Entry(i, screenTime));
+                    dates.add(date);
 
                     // Inflate and populate the record views
                     View recordView = LayoutInflater.from(getContext()).inflate(R.layout.record_item, recordsContainer, false);
-
                     TextView dateTextView = recordView.findViewById(R.id.dateTextView);
                     TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
 
-                    // Set the date and formatted screen time
                     dateTextView.setText(date);
                     screenTimeTextView.setText(formatScreenTime(screenTime));
-
-                    // Add the record view to the container
                     recordsContainer.addView(recordView);
                 }
 
-                // Create a LineDataSet and LineData
+                // Sort years and set it to the Spinner
+                List<String> sortedYears = new ArrayList<>(uniqueYears);
+                Collections.sort(sortedYears, Collections.reverseOrder());
+                yearSpinner.attachDataSource(sortedYears);
+
+                // Configure the chart
                 LineDataSet dataSet = new LineDataSet(entries, "Screen Time");
                 dataSet.setColor(ColorTemplate.COLORFUL_COLORS[0]);
                 dataSet.setValueTextColor(ColorTemplate.COLORFUL_COLORS[0]);
-
                 LineData lineData = new LineData(dataSet);
                 screenTimeChart.setData(lineData);
 
-                // Configure XAxis
                 XAxis xAxis = screenTimeChart.getXAxis();
-                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM); // Better visibility at the bottom
-                xAxis.setGranularity(1f); // Allow intervals of 1 between values
-                xAxis.setLabelCount(5, true); // Set a smaller label count, adjust as needed
-                xAxis.setValueFormatter(new DateValueFormatter(dates)); // Set custom date formatter
-
-                // Rotate the labels for better visibility
-                xAxis.setLabelRotationAngle(45f); // Rotate the labels by 45 degrees
-
-                // Avoid drawing grid lines to make the chart cleaner
+                xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+                xAxis.setGranularity(1f);
+                xAxis.setLabelCount(5, true);
+                xAxis.setValueFormatter(new DateValueFormatter(dates));
+                xAxis.setLabelRotationAngle(45f);
                 xAxis.setDrawGridLines(false);
 
-                // Refresh the chart
                 screenTimeChart.invalidate();
             }
         }
