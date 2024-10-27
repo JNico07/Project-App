@@ -1,14 +1,14 @@
-package com.pytorch.project.gazeguard.common;
+package com.pytorch.project.gazeguard.parentdashboard.childdatafragment;
 
 import com.github.mikephil.charting.formatter.ValueFormatter;
 
 import java.util.List;
 
 // custom ValueFormatter to format the XAxis labels as date strings
-public class DateValueFormatter extends ValueFormatter {
+public class DateValueFormatterChart extends ValueFormatter {
     private final List<String> dates;
 
-    public DateValueFormatter(List<String> dates) {
+    public DateValueFormatterChart(List<String> dates) {
         this.dates = dates;
     }
 
