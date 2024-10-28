@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 public class ChildDataFragment extends Fragment {
@@ -117,11 +118,14 @@ public class ChildDataFragment extends Fragment {
         List<Entry> entries = new ArrayList<>();
         List<String> dates = new ArrayList<>();
 
+        SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        SimpleDateFormat outputDateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
+
         // Filter data for the selected year
         List<Map<String, Object>> filteredData = new ArrayList<>();
         for (Map<String, Object> record : childDataList) {
             String date = (String) record.get("date");
-            if (year.equals("All") || date.startsWith(year)) {
+            if (year.equals("All") || Objects.requireNonNull(date).startsWith(year)) {
                 filteredData.add(record);
             }
         }
@@ -129,8 +133,8 @@ public class ChildDataFragment extends Fragment {
         // Sort filteredData in descending order for recordsContainer
         filteredData.sort((record1, record2) -> {
             try {
-                Date date1 = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse((String) record1.get("date"));
-                Date date2 = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse((String) record2.get("date"));
+                Date date1 = inputDateFormat.parse((String) record1.get("date"));
+                Date date2 = inputDateFormat.parse((String) record2.get("date"));
                 return date2.compareTo(date1); // Descending order
             } catch (Exception e) {
                 Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
@@ -148,7 +152,15 @@ public class ChildDataFragment extends Fragment {
             TextView dateTextView = recordView.findViewById(R.id.dateTextView);
             TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
 
-            dateTextView.setText(date);
+            try {
+                Date parsedDate = inputDateFormat.parse(date);
+                String formattedDate = outputDateFormat.format(parsedDate);
+                dateTextView.setText(formattedDate);
+            } catch (Exception e) {
+                Log.d("ChildDataFragment", "Error formatting date: " + e.getMessage());
+                dateTextView.setText(date); // Fallback to original date if parsing fails
+            }
+
             screenTimeTextView.setText(formatScreenTime(screenTime));
             recordsContainer.addView(recordView);
         }
@@ -205,12 +217,17 @@ public class ChildDataFragment extends Fragment {
     }
 
 
-    // Helper method to format screen time in "hh:mm:ss" format
     private String formatScreenTime(float screenTimeInSeconds) {
         int hours = (int) (screenTimeInSeconds / 3600);
         int minutes = (int) ((screenTimeInSeconds % 3600) / 60);
         int seconds = (int) (screenTimeInSeconds % 60);
 
-        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
+        if (screenTimeInSeconds < 60) {
+            return String.format("%d seconds", seconds);
+        } else if (screenTimeInSeconds < 3600) {
+            return String.format("%d minutes", minutes);
+        } else {
+            return String.format("%d hours %d min", hours, minutes);
+        }
     }
 }
