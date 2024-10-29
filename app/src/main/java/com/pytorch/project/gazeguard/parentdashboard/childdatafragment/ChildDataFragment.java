@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -227,7 +228,7 @@ public class ChildDataFragment extends Fragment {
         } else if (screenTimeInSeconds < 3600) {
             return String.format("%d minutes", minutes);
         } else {
-            return String.format("%d hours %d min", hours, minutes);
+            return String.format("%d hours", hours);
         }
     }
 }

@@ -110,15 +110,15 @@ public class LoginActivity extends AppCompatActivity {
                         });
             }
         });
-        FloatingActionButton fab = findViewById(R.id.backButton);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
-                startActivity(intent);
-                finish();
-            }
-        });
+//        FloatingActionButton fab = findViewById(R.id.backButton);
+//        fab.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(getApplicationContext(), WelcomeActivity.class);
+//                startActivity(intent);
+//                finish();
+//            }
+//        });
 
     }
 

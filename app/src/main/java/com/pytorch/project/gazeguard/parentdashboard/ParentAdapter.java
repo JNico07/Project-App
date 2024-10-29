@@ -26,6 +26,7 @@ import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.pytorch.project.gazeguard.common.FirebaseManager;
 import com.pytorch.project.gazeguard.parentdashboard.childdatafragment.ChildDataFragment;
+import com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment;
 
 
 import org.pytorch.demo.objectdetection.R;
@@ -44,8 +45,16 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
     FirebaseUser currentUser = FirebaseManager.getCurrentUser();
     FirebaseFirestore firestore = FirebaseManager.getFirestore();
 
-    public ParentAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options) {
+    public interface OnItemClickListener {
+        void onShowProgressBar();
+        void onHideProgressBar();
+    }
+
+    private final OnItemClickListener listener;
+
+    public ParentAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, OnItemClickListener listener) {
         super(options);
+        this.listener = listener;
     }
 
     @Override
@@ -61,8 +70,8 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                 .into(myViewHolder.img);
 
         myViewHolder.itemView.setOnClickListener(v -> {
-            // Handle item click event here
-            Toast.makeText(myViewHolder.itemView.getContext(), parentModel.getName(), Toast.LENGTH_SHORT).show();
+
+            listener.onShowProgressBar();
 
             if (currentUser != null) {
                 String uid = currentUser.getUid();
@@ -71,7 +80,6 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                 DatabaseReference childDatabase = FirebaseDatabase.getInstance().getReference()
                         .child("Registered Users").child(uid).child("Child");
 
-                // Query the child nodes to find the specific child node by name without explicitly specifying the child number
                 childDatabase.orderByChild("name").equalTo(childUserName).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -86,40 +94,42 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                                     .addOnSuccessListener(queryDocumentSnapshots -> {
 
                                         List<Map<String, Object>> childDataList = new ArrayList<>();
-
                                         for (DocumentSnapshot document : queryDocumentSnapshots) {
-                                            Log.d("Firestore", "Record: " + document.getData());
-                                            Log.d("Firestore", "Date Started: " + dateCreated);
-
                                             childDataList.add(document.getData());
                                         }
-                                            // Open Fragment and Pass the child data list
-                                            ChildDataFragment fragment = ChildDataFragment.newInstance(childUserName, childDataList);
-                                            ((ParentDashboardActivity) myViewHolder.itemView.getContext())
-                                                    .getSupportFragmentManager()
-                                                    .beginTransaction()
-                                                    .replace(R.id.fragment_container, fragment)
-                                                    .addToBackStack(null)
-                                                    .commit();
+
+                                        // Open Fragment and Pass the child data list
+                                        ChildDataFragment fragment = ChildDataFragment.newInstance(childUserName, childDataList);
+                                        ((ParentDashboardActivity) myViewHolder.itemView.getContext())
+                                                .getSupportFragmentManager()
+                                                .beginTransaction()
+                                                .replace(R.id.fragment_container, fragment)
+                                                .addToBackStack(null)
+                                                .commit();
+
+                                        listener.onHideProgressBar();
                                     })
                                     .addOnFailureListener(e -> {
                                         Log.w("Firestore", "Error querying records", e);
+                                        listener.onHideProgressBar();
                                     });
-
-                            break; // Assuming childUserName is unique, exit loop after finding the child
+                            break; // Exit loop after finding the data
                         }
                     }
 
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Log.w("Firebase", "Error retrieving child data", error.toException());
+                        listener.onHideProgressBar();
                     }
                 });
             } else {
                 Log.w("Firestore", "User is not authenticated");
+                listener.onHideProgressBar();
             }
         });
     }
+
 
 
 

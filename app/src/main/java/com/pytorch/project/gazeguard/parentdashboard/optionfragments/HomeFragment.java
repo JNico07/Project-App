@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerOptions;
@@ -28,7 +29,7 @@ import com.pytorch.project.gazeguard.parentdashboard.ParentModel;
 
 import org.pytorch.demo.objectdetection.R;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements ParentAdapter.OnItemClickListener {
 
     private FirebaseAuth auth;
     private FirebaseUser currentUser;
@@ -41,6 +42,7 @@ public class HomeFragment extends Fragment {
     private FirebaseUser user;
     private DatabaseReference parentNameRef;
     private String parentName;
+    public ProgressBar loadingProgressBarHome;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,6 +52,9 @@ public class HomeFragment extends Fragment {
 
         parentNameTextView = fragmentHomeView.findViewById(R.id.parentName);
         recyclerView = fragmentHomeView.findViewById(R.id.rvHome);
+        loadingProgressBarHome = fragmentHomeView.findViewById(R.id.progressBar_home);
+
+        loadingProgressBarHome.setVisibility(View.GONE);
 
         auth = FirebaseAuth.getInstance();
         currentUser = auth.getCurrentUser();
@@ -71,10 +76,9 @@ public class HomeFragment extends Fragment {
                         .setQuery(FirebaseDatabase.getInstance().getReference("Registered Users").child(uid).child("Child")
                                 , ParentModel.class)
                         .build();
-        parentAdapter = new ParentAdapter(options);
+        parentAdapter = new ParentAdapter(options, this);
         recyclerView.setAdapter(parentAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
 
         return fragmentHomeView;
     }
@@ -99,6 +103,16 @@ public class HomeFragment extends Fragment {
             }
         });
     }
+
+    @Override
+    public void onShowProgressBar() {
+        loadingProgressBarHome.setVisibility(View.VISIBLE);
+    }
+    @Override
+    public void onHideProgressBar() {
+        loadingProgressBarHome.setVisibility(View.GONE);
+    }
+
     public interface ParentNameCallback {
         void onCallback(String parentName);
     }
