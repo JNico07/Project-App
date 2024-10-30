@@ -548,8 +548,9 @@ public class DetectorService extends Service implements LifecycleOwner{
                         // Fetch the new screen time limit value from Firebase
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
+                            screenTimeLimitInSeconds = screenTimeLimit;
 //                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                            screenTimeLimitInSeconds = 5;
+//                            screenTimeLimitInSeconds = 5;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }

@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,8 +27,8 @@ import java.util.Locale;
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
-    private static final long LOCK_DURATION = 10000; // Lock every #
-    private static long TOTAL_DURATION = 30000; // Run for # seconds
+    private static final long LOCK_DURATION = 60000; // Lock every #
+    private static long TOTAL_DURATION; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
     private Handler handler;
@@ -56,14 +57,15 @@ public class LockService extends Service {
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
         handler = new Handler();
-//        lockRunnable = new Runnable() {
-//            @Override
-//            public void run() {
-//                if (devicePolicyManager.isAdminActive(componentName)) {
-//                    devicePolicyManager.lockNow();
-//                }
-//            }
-//        };
+        lockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (devicePolicyManager.isAdminActive(componentName)) {
+                    devicePolicyManager.lockNow();
+                    handler.postDelayed(this, LOCK_DURATION);
+                }
+            }
+        };
         // Start the locking process
         handler.postDelayed(new Runnable() {
             @Override
@@ -80,17 +82,13 @@ public class LockService extends Service {
 
         Log.d("LockService", "Current Time: " + currentLocalTime);
         Log.d("LockService", "Time Unlock Device: " + timeUnlockDevice);
+        Log.d("LockService", "Total Duration: " + TOTAL_DURATION);
 
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (shouldUnlockDevice()) {
-                    Log.d("LockService", "Device unlocking...");
-                    stopSelf();
-                } else if (shouldLockDevice()) {
-                    lockDevice();
-                    Log.d("LockService", "Device locked");
-                }
+                lockDevice();
+                Log.d("LockService", "Device locked");
                 handler.postDelayed(this, 10000);
             }
         }, 10000); // Initial delay
@@ -103,33 +101,64 @@ public class LockService extends Service {
             return LocalTime.now(); // Set default value or handle the error
         }
     }
-    private boolean shouldLockDevice() {
-        return currentLocalTime.isBefore(timeUnlockDevice);
-    }
+
     private void lockDevice() {
-        if (devicePolicyManager.isAdminActive(componentName)) {
-            try {
-                // Simply lock the device - calls will still be receivable by default
-                devicePolicyManager.lockNow();
+        // Start a CountDownTimer for the total duration
+        if (TOTAL_DURATION > 0) {
+            countDownTimer = new CountDownTimer(TOTAL_DURATION, LOCK_DURATION) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    // Lock the device every 5 seconds
+                    if (devicePolicyManager.isAdminActive(componentName)) {
+                        devicePolicyManager.lockNow();
 
-                // Stop camera service
-                controlDetectorServiceIntent.setAction("STOP_CAMERA");
-                startService(controlDetectorServiceIntent);
+                        // Stop camera service
+                        controlDetectorServiceIntent.setAction("STOP_CAMERA");
+                        startService(controlDetectorServiceIntent);
 
-                Toast.makeText(this, "Device locked - Calls are still receivable", Toast.LENGTH_SHORT).show();
-                Log.d("LockService", "Device locked successfully");
-            } catch (Exception e) {
-                Log.e("LockService", "Error locking device: " + e.getMessage());
-                Toast.makeText(this, "Failed to lock device", Toast.LENGTH_SHORT).show();
-            }
+                        Toast.makeText(LockService.this, "LockService running", Toast.LENGTH_SHORT).show();
+                        Log.d("LockService", "Device locked successfully");
+                    } else {
+                        Log.w("LockService", "Device admin is not active");
+                        Toast.makeText(LockService.this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onFinish() {
+                    controlDetectorServiceIntent.setAction("START_CAMERA");
+                    startService(controlDetectorServiceIntent);
+
+                    Toast.makeText(LockService.this, "LockService finished", Toast.LENGTH_SHORT).show();
+                    Log.d("LockService", "LockService finished");
+                    stopSelf(); // Stop the service once finished
+                }
+            }.start();
         } else {
-            Log.w("LockService", "Device admin is not active");
-            Toast.makeText(this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
+            Log.d("LockService", "Invalid TOTAL_DURATION. Skipping CountDownTimer start.");
         }
+
     }
-    private boolean shouldUnlockDevice() {
-        return timeUnlockDevice != null && !currentLocalTime.isBefore(timeUnlockDevice);
+    private void calculateRemainingDurationMillis() {
+        LocalDateTime now = LocalDateTime.now();
+
+        if (timeUnlockDevice != null) {
+            LocalDateTime unlockDateTime = timeUnlockDevice.atDate(LocalDate.now());
+
+            // Check if timeUnlockDevice is logically set for the next day
+            if (unlockDateTime.isBefore(now)) {
+                // Adjust to the next day
+                unlockDateTime = unlockDateTime.plusDays(1);
+            }
+
+            TOTAL_DURATION = java.time.Duration.between(now, unlockDateTime).toMillis();
+        } else {
+            // Default TOTAL_DURATION if no unlock time is provided
+            TOTAL_DURATION = Integer.MAX_VALUE;
+        }
+
+        Log.d("LockService", "Total Duration Calculated: " + TOTAL_DURATION);
     }
+
     private void startUpdatingCurrentLocalTime() {
         handler.postDelayed(new Runnable() {
             @Override
@@ -154,13 +183,21 @@ public class LockService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
-
         // Fetch the unlock time from the intent (sent by DetectorService)
         if (intent != null) {
             unlockTime = intent.getStringExtra("UNLOCK_TIME");
             if (unlockTime != null && !unlockTime.isEmpty()) {
                 try {
                     timeUnlockDevice = LocalTime.parse(unlockTime, formatterTime);
+
+                    calculateRemainingDurationMillis();
+                    Log.d("LockService", "Total Duration: " + TOTAL_DURATION);
+
+                    int hours = (int) (TOTAL_DURATION / 3600000);
+                    int minutes = (int) ((TOTAL_DURATION % 3600000) / 60000);
+                    Toast.makeText(LockService.this,
+                            "Total Lock Duration: " + hours + " hours " + minutes + " minutes",
+                            Toast.LENGTH_LONG).show();
                 } catch (DateTimeParseException e) {
                     Log.e("LockService", "Failed to parse unlock time: " + unlockTime, e);
                 }

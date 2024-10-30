@@ -27,8 +27,8 @@
 
     <Button
         android:id="@+id/startButton"
-        android:layout_width="148dp"
-        android:layout_height="69dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true"
         android:layout_alignParentEnd="true"
@@ -53,13 +53,15 @@
         android:layout_below="@+id/startButton"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginStart="150dp"
+        android:layout_marginStart="120dp"
         android:layout_marginTop="289dp"
+        android:layout_marginEnd="30dp"
         android:layout_marginBottom="14dp"
+        android:layout_toStartOf="@+id/admin_switch"
         android:gravity="center"
         android:text="Device Admin"
         android:textColor="@color/black"
-        android:textSize="10sp" />
+        android:textSize="12sp" />
 
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/admin_switch"
@@ -69,9 +71,9 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
         android:layout_marginTop="279dp"
-        android:layout_marginEnd="130dp"
-        android:layout_marginBottom="9dp"
+        android:layout_marginEnd="120dp"
+        android:layout_marginBottom="14dp"
         android:checked="false"
-        app:showText="true" />
+        app:showText="true"/>
 
 </RelativeLayout>

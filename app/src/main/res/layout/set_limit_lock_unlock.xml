@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:elevation="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardUseCompatPadding="true"
+    android:layout_margin="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layoutDirection="ltr">
+
+        <!-- User Name TextView -->
+        <TextView
+            android:id="@+id/userName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="UserName"
+            android:textColor="@android:color/black"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Screen Time Limit TextView with Question Mark -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="16dp">
+
+            <TextView
+                android:id="@+id/screenTimeLimit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Limit: 00 Hrs"
+                android:textColor="@color/gray"
+                android:textSize="20sp"
+                android:layout_marginEnd="5dp" />
+
+            <ImageView
+                android:id="@+id/questionMarkSetLimit"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/question_mark_24"
+                android:contentDescription="Question Mark" />
+        </LinearLayout>
+
+        <!-- Screen Time Limit Slider -->
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:stepSize="1.0"
+            android:valueFrom="0.0"
+            android:valueTo="12.0"
+            android:contentDescription="Set Screen Time Limit" />
+
+        <!-- Unlock Time TextView with Question Mark -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/deviceUnlockTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Unlock Time: 00:00"
+                android:textColor="@color/gray"
+                android:textSize="20sp"
+                android:layout_marginEnd="5dp" />
+
+            <ImageView
+                android:id="@+id/questionMarkSetUnlockTime"
+                android:layout_width="15dp"
+                android:layout_height="15dp"
+                android:src="@drawable/question_mark_24"
+                android:contentDescription="Question Mark" />
+        </LinearLayout>
+
+        <!-- Time Picker Button -->
+        <Button
+            android:id="@+id/timePickerButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/bright_blue"
+            android:text="Set Unlock Time"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp" />
+
+        <!-- Space Between Buttons -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="20dp" />
+
+        <Button
+            android:id="@+id/unlockDeviceButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@color/app_accent"
+            android:text="Unlock Now"
+            android:textColor="@android:color/white"
+            android:textSize="18sp"
+            android:padding="12dp"
+            android:drawableLeft="@drawable/lock_open"
+            android:drawableRight="@drawable/lock_open"
+            android:drawableTint="@color/white"/>
+
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
