@@ -1,5 +1,6 @@
 package com.pytorch.project.gazeguard.parentdashboard;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.os.Handler;
 import android.os.Looper;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,6 +31,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateLimitTask, updateUnlockTimeTask;
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
+    private boolean isUnlockDeviceNow = false;
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -96,7 +99,23 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                             .setValue(setLimit);
                 };
                 handler.postDelayed(updateLimitTask, 1300);
+
             }
+        });
+
+        // Unlock Button
+        holder.isUnlockDeviceButton.setOnClickListener(v -> {
+            isUnlockDeviceNow = true;
+            // Save the updated limit value to Firebase
+            FirebaseDatabase.getInstance().getReference("Registered Users")
+                    .child(uid)
+                    .child("Child")
+                    .child(getRef(position).getKey())
+                    .child("isUnlockDeviceNow")
+                    .setValue(isUnlockDeviceNow);
+
+            Log.d("SetLimitAdapter", "Unlock Device Button Clicked");
+            Toast.makeText(holder.itemView.getContext(), "Unlock Device Now", Toast.LENGTH_SHORT).show();
         });
 
         // Tooltips
@@ -121,7 +140,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         TextView screenTimeLimit;
         TextView deviceUnlockTime;
         Slider slider;
-        Button timePickerButton;
+        Button timePickerButton, isUnlockDeviceButton;
         ImageView questionMarkSetLimit;
         ImageView questionMarkSetUnlockTime;
 
@@ -134,6 +153,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
             timePickerButton = itemView.findViewById(R.id.timePickerButton);
             questionMarkSetLimit = itemView.findViewById(R.id.questionMarkSetLimit);
             questionMarkSetUnlockTime = itemView.findViewById(R.id.questionMarkSetUnlockTime);
+            isUnlockDeviceButton = itemView.findViewById(R.id.unlockDeviceButton);
         }
     }
 

@@ -14,8 +14,19 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -43,6 +54,12 @@ public class LockService extends Service {
     private DateTimeFormatter formatterTime;
     private LocalTime currentLocalTime, timeUnlockDevice;
 
+    private FirebaseAuth mAuth;
+    private FirebaseUser currentUser;
+    private DatabaseReference isUnlockDeviceDeviceNowRef;
+    private String uid;
+    private boolean isUnlockDeviceNow;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -55,6 +72,18 @@ public class LockService extends Service {
 
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
+
+        String childNumber = SharedPrefsUtil.getChildNumber(this);
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        // Initialize Firebase Realtime Database reference
+        if (currentUser != null) {
+            uid = currentUser.getUid();
+            // reference for "isUnlockDeviceButton"
+            isUnlockDeviceDeviceNowRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users").child(uid).child("Child").child(childNumber).child("isUnlockDeviceNow");
+        }
 
         handler = new Handler();
         lockRunnable = new Runnable() {
@@ -122,11 +151,19 @@ public class LockService extends Service {
                         Log.w("LockService", "Device admin is not active");
                         Toast.makeText(LockService.this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
                     }
+
+                    fetchIsUnlockDeviceNow();
+                    Log.d("LockService", "isUnlockDeviceNow: " + isUnlockDeviceNow);
+                    if (isUnlockDeviceNow) {
+                        onFinish();
+                    }
                 }
                 @Override
                 public void onFinish() {
                     controlDetectorServiceIntent.setAction("START_CAMERA");
                     startService(controlDetectorServiceIntent);
+
+                    updateIsUnlockDeviceNow();
 
                     Toast.makeText(LockService.this, "LockService finished", Toast.LENGTH_SHORT).show();
                     Log.d("LockService", "LockService finished");
@@ -136,7 +173,6 @@ public class LockService extends Service {
         } else {
             Log.d("LockService", "Invalid TOTAL_DURATION. Skipping CountDownTimer start.");
         }
-
     }
     private void calculateRemainingDurationMillis() {
         LocalDateTime now = LocalDateTime.now();
@@ -183,6 +219,7 @@ public class LockService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
+        Log.d("LockService", "onStartCommand called");
         // Fetch the unlock time from the intent (sent by DetectorService)
         if (intent != null) {
             unlockTime = intent.getStringExtra("UNLOCK_TIME");
@@ -206,7 +243,6 @@ public class LockService extends Service {
             }
         }
 
-
         Intent notificationIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE);
 
@@ -220,6 +256,29 @@ public class LockService extends Service {
 
         return START_STICKY;
     }
+
+    private void fetchIsUnlockDeviceNow() {
+        if (isUnlockDeviceDeviceNowRef != null) {
+            isUnlockDeviceDeviceNowRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists()) {
+                        isUnlockDeviceNow = Boolean.TRUE.equals(snapshot.getValue(Boolean.class));
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("Failed to read value", "Failed to read value.", error.toException());
+                }
+            });
+        }
+    }
+    private void updateIsUnlockDeviceNow() {
+        if (isUnlockDeviceDeviceNowRef != null) {
+            isUnlockDeviceDeviceNowRef.setValue(false);
+        }
+    }
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -253,20 +312,10 @@ public class LockService extends Service {
             countDownTimer = null;  // Clear the reference
         }
 
-        // Clean up device policy manager
-        if (devicePolicyManager != null) {
-            devicePolicyManager = null;
-        }
-        componentName = null;
-
-        // Clean up context reference
-        context = null;
-
-        // Restart DetectorService or any other cleanup action
+        // Restart DetectorService
         if (controlDetectorServiceIntent != null) {
             controlDetectorServiceIntent.setAction("START_CAMERA");
             startService(controlDetectorServiceIntent);
-            controlDetectorServiceIntent = null;  // Clear the reference
         }
 
         // Remove the ongoing notification

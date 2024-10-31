@@ -90,7 +90,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     private SharedPreferences prefsTimer;
     private FirebaseAuth mAuth;
     private FirebaseUser currentUser;
-    private DatabaseReference mDatabase, screenTimeLimitRef, deviceUnlockTime ;
+    private DatabaseReference mDatabase, screenTimeLimitRef, deviceUnlockTime, isUnlockDeviceDeviceNowRef;
     private FirebaseFirestore firestore;
 
     private String uid;
@@ -99,6 +99,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private int screenTimeLimitInSeconds;
     private String unlockTime;
+    public boolean isUnlockDeviceNow;
 
     public DetectorService() {
     }
@@ -140,7 +141,6 @@ public class DetectorService extends Service implements LifecycleOwner{
         // Firebase DB
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
-
         firestore = FirebaseFirestore.getInstance();
 
         String childNumber = SharedPrefsUtil.getChildNumber(this);
@@ -157,7 +157,8 @@ public class DetectorService extends Service implements LifecycleOwner{
             // reference for "deviceUnlockTime"
             deviceUnlockTime = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users").child(uid).child("Child").child(childNumber).child("deviceUnlockTime");
-
+            isUnlockDeviceDeviceNowRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users").child(uid).child("Child").child(childNumber).child("isUnlockDeviceNow");
         }
 
         context = this;
@@ -193,7 +194,6 @@ public class DetectorService extends Service implements LifecycleOwner{
             setupCameraX();
         }, 5000); // Delay before setting up CameraX
 
-
         fetchScreenTimeLimit();
         fetchDeviceUnlockTime();
 
@@ -220,6 +220,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                     break;
                 case "START_CAMERA":
                     updateNotification("00:00:00");
+                    updateIsUnlockDeviceNow();
                     setupCameraX();
                     break;
             }
@@ -423,14 +424,11 @@ public class DetectorService extends Service implements LifecycleOwner{
         handler.postDelayed(runnable, 1000);
     }
 
-
     @NonNull
     @Override
     public Lifecycle getLifecycle() {
         return mLifecycleRegistry;
     }
-
-
 
 
     private void eyeTimeTracker() {
@@ -548,9 +546,8 @@ public class DetectorService extends Service implements LifecycleOwner{
                         // Fetch the new screen time limit value from Firebase
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
-                            screenTimeLimitInSeconds = screenTimeLimit;
 //                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-//                            screenTimeLimitInSeconds = 5;
+                            screenTimeLimitInSeconds = screenTimeLimit;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
@@ -564,7 +561,6 @@ public class DetectorService extends Service implements LifecycleOwner{
             });
         }
     }
-
 
     Intent intentLockService;
     private void checkScreenTimeLimit() {
@@ -585,6 +581,12 @@ public class DetectorService extends Service implements LifecycleOwner{
                 stopService(intentLockService);  // Stop the LockService if it exists
                 intentLockService = null; // Clear the reference
             }
+        }
+    }
+
+    private void updateIsUnlockDeviceNow() {
+        if (isUnlockDeviceDeviceNowRef != null) {
+            isUnlockDeviceDeviceNowRef.setValue(false);
         }
     }
 
