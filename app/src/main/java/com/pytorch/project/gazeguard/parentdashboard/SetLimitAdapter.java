@@ -1,5 +1,6 @@
 package com.pytorch.project.gazeguard.parentdashboard;
 
+import android.content.DialogInterface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,10 +18,15 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.slider.Slider;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.pytorch.project.gazeguard.common.TooltipFormatter;
 
 import org.pytorch.demo.objectdetection.R;
@@ -31,7 +37,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateLimitTask, updateUnlockTimeTask;
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
-    private boolean isUnlockDeviceNow = false;
+    private boolean isUnlockDeviceNow, checkIfIsUnlockDeviceNow;
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -105,7 +111,20 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
         // Unlock Button
         holder.isUnlockDeviceButton.setOnClickListener(v -> {
-            isUnlockDeviceNow = true;
+            // Show confirmation dialog
+            new MaterialAlertDialogBuilder(holder.itemView.getContext())
+                    .setTitle("Unlock Device")
+                    .setMessage("Are you sure you want to unlock the device?")
+                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                    .setPositiveButton("Yes", (dialog, which) -> {
+                        if (checkIfIsUnlockDeviceNow) {
+                            Toast.makeText(holder.itemView.getContext(), "Device is currently Unlocked", Toast.LENGTH_LONG).show();
+                        } else {
+                            isUnlockDeviceNow = true;
+                            Toast.makeText(holder.itemView.getContext(), "Unlock Device Now", Toast.LENGTH_LONG).show();
+                        }
+                    })
+                    .show();
             // Save the updated limit value to Firebase
             FirebaseDatabase.getInstance().getReference("Registered Users")
                     .child(uid)
@@ -113,9 +132,22 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                     .child(getRef(position).getKey())
                     .child("isUnlockDeviceNow")
                     .setValue(isUnlockDeviceNow);
-
-            Log.d("SetLimitAdapter", "Unlock Device Button Clicked");
-            Toast.makeText(holder.itemView.getContext(), "Unlock Device Now", Toast.LENGTH_SHORT).show();
+            // Check if device is currently unlocked
+            DatabaseReference unlockRef = FirebaseDatabase.getInstance().getReference("Registered Users")
+                    .child(uid)
+                    .child("Child")
+                    .child(getRef(position).getKey())
+                    .child("isUnlockDeviceNow");
+            unlockRef.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    checkIfIsUnlockDeviceNow = Boolean.TRUE.equals(snapshot.getValue(Boolean.class));
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.w("SetLimitAdapter", "Failed to read isUnlockDeviceNow value.", error.toException());
+                }
+            });
         });
 
         // Tooltips
