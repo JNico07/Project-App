@@ -111,27 +111,6 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
         // Unlock Button
         holder.isUnlockDeviceButton.setOnClickListener(v -> {
-            // Show confirmation dialog
-            new MaterialAlertDialogBuilder(holder.itemView.getContext())
-                    .setTitle("Unlock Device")
-                    .setMessage("Are you sure you want to unlock the device?")
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        if (checkIfIsUnlockDeviceNow) {
-                            Toast.makeText(holder.itemView.getContext(), "Device is currently Unlocked", Toast.LENGTH_LONG).show();
-                        } else {
-                            isUnlockDeviceNow = true;
-                            Toast.makeText(holder.itemView.getContext(), "Unlock Device Now", Toast.LENGTH_LONG).show();
-                        }
-                    })
-                    .show();
-            // Save the updated limit value to Firebase
-            FirebaseDatabase.getInstance().getReference("Registered Users")
-                    .child(uid)
-                    .child("Child")
-                    .child(getRef(position).getKey())
-                    .child("isUnlockDeviceNow")
-                    .setValue(isUnlockDeviceNow);
             // Check if device is currently unlocked
             DatabaseReference unlockRef = FirebaseDatabase.getInstance().getReference("Registered Users")
                     .child(uid)
@@ -148,6 +127,27 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                     Log.w("SetLimitAdapter", "Failed to read isUnlockDeviceNow value.", error.toException());
                 }
             });
+            if (checkIfIsUnlockDeviceNow) {
+                Toast.makeText(holder.itemView.getContext(), "Device is currently Unlocked", Toast.LENGTH_SHORT).show();
+            } else {
+                // Show confirmation dialog
+                new MaterialAlertDialogBuilder(holder.itemView.getContext())
+                        .setTitle("Unlock Device")
+                        .setMessage("Are you sure you want to unlock the device?")
+                        .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                        .setPositiveButton("Yes", (dialog, which) -> {
+                            isUnlockDeviceNow = true;
+                            // Save the updated limit value to Firebase
+                            FirebaseDatabase.getInstance().getReference("Registered Users")
+                                    .child(uid)
+                                    .child("Child")
+                                    .child(getRef(position).getKey())
+                                    .child("isUnlockDeviceNow")
+                                    .setValue(isUnlockDeviceNow);
+                            Toast.makeText(holder.itemView.getContext(), "Unlock Device Now", Toast.LENGTH_SHORT).show();
+                        })
+                        .show();
+            }
         });
 
         // Tooltips
