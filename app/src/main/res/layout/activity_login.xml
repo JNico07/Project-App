@@ -8,24 +8,6 @@
     android:background="@color/app_theme"
     tools:context="com.pytorch.project.gazeguard.auth.LoginActivity">
 
-<!--    <com.google.android.material.floatingactionbutton.FloatingActionButton-->
-<!--        android:id="@+id/backButton"-->
-<!--        android:layout_width="53dp"-->
-<!--        android:layout_height="52dp"-->
-<!--        android:layout_gravity="start"-->
-<!--        android:layout_marginStart="16dp"-->
-<!--        android:layout_marginTop="16dp"-->
-<!--        android:layout_marginEnd="62dp"-->
-<!--        android:layout_marginBottom="166dp"-->
-<!--        android:clickable="true"-->
-<!--        android:focusable="true"-->
-<!--        android:src="@drawable/baseline_arrow_back_ios_new_24"-->
-<!--        app:backgroundTint="@color/app_theme"-->
-<!--        app:layout_constraintBottom_toTopOf="@+id/cardView"-->
-<!--        app:layout_constraintEnd_toStartOf="@+id/appLogo"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        android:contentDescription="TODO" />-->
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline"
