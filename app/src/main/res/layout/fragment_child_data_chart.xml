@@ -1,0 +1,95 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/childNameTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:paddingTop="10dp"
+        android:text="Child Name"
+        android:textSize="25sp"
+        android:textStyle="bold" />
+
+    <!-- Dropdown (Spinner) for Year selection -->
+    <org.angmarch.views.NiceSpinner
+        android:id="@+id/yearSpinner"
+        android:layout_width="wrap_content"
+        android:layout_height="39dp"
+        android:layout_below="@+id/childNameTextView"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="140dp"
+        android:layout_marginEnd="140dp"
+        app:popupTextAlignment="center"/>
+
+    <com.github.mikephil.charting.charts.LineChart
+        android:id="@+id/screenTimeChart"
+        android:layout_width="500dp"
+        android:layout_height="220dp"
+        android:layout_below="@+id/yearSpinner"
+        android:layout_marginStart="3dp"
+        android:layout_marginEnd="3dp"
+        android:layout_marginBottom="5dp"
+        android:background="@drawable/chart_border" /> <!-- Set the border drawable here -->
+
+
+    <!-- Container to handle the positioning of Date and Screen Time -->
+    <LinearLayout
+        android:id="@+id/linearLayout2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/screenTimeChart"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <!-- Date aligned to the left half, centered in its half -->
+        <TextView
+            android:id="@+id/dateTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.1"
+            android:gravity="center"
+            android:text="DATE"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Screen Time aligned to the right half, centered in its half -->
+        <TextView
+            android:id="@+id/screenTimeTextView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.9"
+            android:gravity="center"
+            android:text="SCREEN TIME"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- ScrollView for displaying the screen time records -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="399dp"
+        android:layout_below="@+id/linearLayout2">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <!-- This LinearLayout will be dynamically filled with records -->
+            <LinearLayout
+                android:id="@+id/recordsContainer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+    </ScrollView>
+
+</RelativeLayout>

@@ -1,0 +1,61 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme.ObjectDetection" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/app_theme</item>
+        <item name="colorPrimaryDark">@color/app_theme</item>
+        <item name="colorAccent">@color/app_theme</item>
+        <item name="android:actionOverflowMenuStyle">@style/MyTheme</item>
+    </style>
+
+    <style name="roundedImageView">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light">
+        <!-- Customize properties as needed -->
+        <item name="android:colorBackground">@color/colorPopupBackground</item>
+        <item name="android:textColor">@android:color/white</item>
+        <!-- Add more styling attributes here if required -->
+    </style>
+
+    <style name="MyTheme" parent="android:style/Widget.Holo.ActionButton.Overflow">
+        <item name="android:textColorSecondary">@color/app_theme</item>
+    </style>
+
+    <!--  TOOLTIP LAYOUT  -->
+    <attr format="reference" name="ttlm_defaultStyle"/>
+    <declare-styleable name="TooltipLayout"><attr format="dimension" name="ttlm_padding"/><attr format="color" name="ttlm_strokeColor"/><attr format="color" name="ttlm_backgroundColor"/><attr format="dimension" name="ttlm_strokeWeight"/><attr format="dimension" name="ttlm_cornerRadius"/><attr format="float" name="ttlm_arrowRatio"/><attr name="android:textAppearance"/><attr name="android:gravity"/><attr format="reference" name="ttlm_overlayStyle"/><attr format="string" name="ttlm_font"/><attr format="dimension" name="ttlm_elevation"/></declare-styleable>
+    <declare-styleable name="TooltipOverlay"><attr name="android:color"/><attr name="android:alpha"/><attr format="integer" name="ttlm_repeatCount"/><attr format="integer" name="ttlm_duration"/><attr name="android:layout_margin"/></declare-styleable>
+    <dimen name="ttlm_default_corner_radius">4dip</dimen>
+    <dimen name="ttlm_default_elevation">2dp</dimen>
+    <dimen name="ttlm_default_padding">20dip</dimen>
+    <dimen name="ttlm_default_stroke_weight">0dip</dimen>
+    <item name="ttlm_container_id" type="id"/>
+    <style name="ToolTipLayoutStyle">
+        <item name="ttlm_padding">@dimen/ttlm_default_padding</item>
+        <item name="ttlm_strokeColor">@android:color/transparent</item>
+        <item name="ttlm_backgroundColor">@color/electric_blue</item>
+        <item name="ttlm_strokeWeight">@dimen/ttlm_default_stroke_weight</item>
+        <item name="ttlm_cornerRadius">@dimen/ttlm_default_corner_radius</item>
+        <item name="ttlm_arrowRatio">1.4</item>
+        <item name="android:textAppearance">@style/TooltipTextAppearance</item>
+        <item name="ttlm_overlayStyle">@style/ToolTipOverlayDefaultStyle</item>
+        <item name="ttlm_elevation">@dimen/ttlm_default_elevation</item>
+    </style>
+    <style name="ToolTipOverlayDefaultStyle">
+        <item name="android:color">?attr/colorAccent</item>
+        <item name="ttlm_repeatCount">99</item>
+        <item name="ttlm_duration">600</item>
+        <item name="android:alpha">0.5</item>
+        <item name="android:layout_margin">8dp</item>
+    </style>
+
+    <style name="TooltipTextAppearance" parent="TextAppearance.AppCompat">
+        <item name="android:textSize">20sp</item> <!-- Font Size -->
+        <item name="android:textColor">@color/white</item> <!-- Text Color -->
+    </style>
+
+</resources>

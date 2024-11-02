@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn = "navigation_view">
+
+    <group
+        android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/nav_home"
+            android:title="Home"/>
+        <item
+            android:id="@+id/nav_set_limit"
+            android:icon="@drawable/baseline_limit"
+            android:title="Set Limit &amp; Lock"/>
+        <item
+            android:id="@+id/nav_settings"
+            android:icon="@drawable/nav_setting"
+            android:title="Settings"/>
+        <item
+            android:id="@+id/nav_about"
+            android:icon="@drawable/nav_about"
+            android:title="About"/>
+
+    </group>
+
+    <item
+        android:title="">
+
+        <menu>
+            <item
+                android:id="@+id/nav_back"
+                android:icon="@drawable/baseline_arrow_back_24"
+                android:title="Back"/>
+            <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/nav_logout"
+                android:title="Logout"/>
+        </menu>
+
+    </item>
+</menu>
