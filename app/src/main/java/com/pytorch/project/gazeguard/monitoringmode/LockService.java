@@ -101,7 +101,7 @@ public class LockService extends Service {
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
             String childNumber = SharedPrefsUtil.getChildNumber(this);
-            
+
             // Setup Firebase reference for unlock time
             deviceUnlockTimeRef = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users")
@@ -109,7 +109,7 @@ public class LockService extends Service {
                     .child("Child")
                     .child(childNumber)
                     .child("deviceUnlockTime");
-                    
+
             // Add listener for unlock time changes
             unlockTimeListener = new ValueEventListener() {
                 @Override
@@ -121,15 +121,15 @@ public class LockService extends Service {
                             try {
                                 timeUnlockDevice = LocalTime.parse(unlockTime, formatterTime);
                                 calculateRemainingDurationMillis();
-                                
+
                                 // Cancel existing timer
                                 if (countDownTimer != null) {
                                     countDownTimer.cancel();
                                 }
-                                
+
                                 // Start new timer with updated duration
                                 lockDevice();
-                                
+
                                 Log.d("LockService", "Unlock time updated to: " + unlockTime);
                                 Log.d("LockService", "New total duration: " + TOTAL_DURATION);
                             } catch (DateTimeParseException e) {
@@ -144,7 +144,7 @@ public class LockService extends Service {
                     Log.e("LockService", "Failed to read unlock time", error.toException());
                 }
             };
-            
+
             // Start listening for changes
             deviceUnlockTimeRef.addValueEventListener(unlockTimeListener);
         }
@@ -185,12 +185,14 @@ public class LockService extends Service {
                 @Override
                 public void onTick(long millisUntilFinished) {
                     if (isServiceStopping) {
+                        updateLockStatus(false);
                         cancel();
                         return;
                     }
                     // Lock the device
                     if (devicePolicyManager.isAdminActive(componentName)) {
                         devicePolicyManager.lockNow();
+                        updateLockStatus(true);
 
                         // Stop camera service
                         controlDetectorServiceIntent.setAction("STOP_CAMERA");
@@ -207,6 +209,7 @@ public class LockService extends Service {
                 @Override
                 public void onFinish() {
                     if (!isServiceStopping) {
+                        updateLockStatus(false);
                         controlDetectorServiceIntent.setAction("START_CAMERA");
                         startService(controlDetectorServiceIntent);
                         stopSelf();
@@ -261,7 +264,6 @@ public class LockService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         createNotificationChannel();
         Log.d("LockService", "onStartCommand called");
-        // Fetch the unlock time from the intent (sent by DetectorService)
         if (intent != null) {
             unlockTime = intent.getStringExtra("UNLOCK_TIME");
             if (unlockTime != null && !unlockTime.isEmpty()) {
@@ -319,6 +321,7 @@ public class LockService extends Service {
     @Override
     public void onDestroy() {
         isServiceStopping = true;
+        updateLockStatus(false);
 
         try {
             // Remove Firebase listener
@@ -370,8 +373,23 @@ public class LockService extends Service {
         }
     }
 
-}
+    private void updateLockStatus(boolean isLocked) {
+        if (mAuth.getCurrentUser() != null) {
+            String uid = mAuth.getCurrentUser().getUid();
+            String childNumber = SharedPrefsUtil.getChildNumber(this);
+            
+            DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users")
+                    .child(uid)
+                    .child("Child")
+                    .child(childNumber)
+                    .child("isDeviceLocked");
+                    
+            lockStatusRef.setValue(isLocked);
+        }
+    }
 
+}
 
 
 

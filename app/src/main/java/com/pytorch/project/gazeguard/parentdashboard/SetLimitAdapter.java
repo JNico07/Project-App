@@ -53,6 +53,28 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         holder.slider.setValue(model.getScreenTimeLimit());
         holder.screenTimeLimit.setText("Limit: " + model.getScreenTimeLimit() + " Hrs");
 
+        // Add listener for lock status
+        DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
+                .child(uid)
+                .child("Child")
+                .child(getRef(position).getKey())
+                .child("isDeviceLocked");
+        lockStatusRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                Boolean isLocked = snapshot.getValue(Boolean.class);
+                if (isLocked != null && isLocked) {
+                    holder.lockStatusIcon.setVisibility(View.VISIBLE);
+                } else {
+                    holder.lockStatusIcon.setVisibility(View.GONE);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("SetLimitAdapter", "Error reading lock status", error.toException());
+            }
+        });
+
         // Time picker button click listener
         holder.timePickerButton.setOnClickListener(v -> {
             MaterialTimePicker picker = new MaterialTimePicker.Builder()
@@ -110,39 +132,58 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
         // Unlock Button
         holder.isUnlockDeviceButton.setOnClickListener(v -> {
-            new MaterialAlertDialogBuilder(holder.itemView.getContext())
-                    .setTitle("Unlock Device")
-                    .setMessage("Are you sure you want to unlock the device?")
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .setPositiveButton("Yes", (dialog, which) -> {
-                        // Update Firebase to trigger device unlock
-                        FirebaseDatabase.getInstance().getReference("Registered Users")
-                                .child(uid)
-                                .child("Child")
-                                .child(getRef(position).getKey())
-                                .child("isUnlockDeviceNow")
-                                .setValue(true)
-                                .addOnSuccessListener(aVoid -> {
-                                    Toast.makeText(holder.itemView.getContext(), 
-                                        "Device will be unlocked", Toast.LENGTH_SHORT).show();
-                                    
-                                    // Reset the value after a short delay
-                                    handler.postDelayed(() -> {
-                                        FirebaseDatabase.getInstance().getReference("Registered Users")
-                                                .child(uid)
-                                                .child("Child")
-                                                .child(getRef(position).getKey())
-                                                .child("isUnlockDeviceNow")
-                                                .setValue(false);
-                                    }, 2000); // Reset after 2 seconds
+            // Check if the device is locked
+            lockStatusRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    Boolean isLocked = snapshot.getValue(Boolean.class);
+                    if (isLocked != null && isLocked) {
+                        // Show the Material Dialog if the device is locked
+                        new MaterialAlertDialogBuilder(holder.itemView.getContext())
+                                .setTitle("Unlock Device")
+                                .setMessage("Are you sure you want to unlock the device?")
+                                .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                                .setPositiveButton("Yes", (dialog, which) -> {
+                                    // Update Firebase to trigger device unlock
+                                    FirebaseDatabase.getInstance().getReference("Registered Users")
+                                            .child(uid)
+                                            .child("Child")
+                                            .child(getRef(holder.getAdapterPosition()).getKey())
+                                            .child("isUnlockDeviceNow")
+                                            .setValue(true)
+                                            .addOnSuccessListener(aVoid -> {
+                                                Toast.makeText(holder.itemView.getContext(), model.getName() +
+                                                        "'s Device is now Unlocked", Toast.LENGTH_SHORT).show();
+
+                                                // Reset the value after a short delay
+                                                handler.postDelayed(() -> {
+                                                    FirebaseDatabase.getInstance().getReference("Registered Users")
+                                                            .child(uid)
+                                                            .child("Child")
+                                                            .child(getRef(holder.getAdapterPosition()).getKey())
+                                                            .child("isUnlockDeviceNow")
+                                                            .setValue(false);
+                                                }, 2000); // Reset after 2 seconds
+                                            })
+                                            .addOnFailureListener(e ->
+                                                    Toast.makeText(holder.itemView.getContext(),
+                                                            "Failed to unlock device", Toast.LENGTH_SHORT).show()
+                                            );
                                 })
-                                .addOnFailureListener(e -> 
-                                    Toast.makeText(holder.itemView.getContext(), 
-                                        "Failed to unlock device", Toast.LENGTH_SHORT).show()
-                                );
-                    })
-                    .show();
+                                .show();
+                    } else {
+                        // Show a Toast message if the device is not locked
+                        Toast.makeText(holder.itemView.getContext(), model.getName() +
+                                "'s device is currently unlocked", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e("SetLimitAdapter", "Error reading lock status", error.toException());
+                }
+            });
         });
+
 
         // Tooltips
         holder.questionMarkSetLimit.setOnClickListener(v ->
@@ -152,6 +193,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
         // Accessibility
         holder.slider.setOnClickListener(View::performClick);
+
     }
 
     @NonNull
@@ -169,6 +211,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         Button timePickerButton, isUnlockDeviceButton;
         ImageView questionMarkSetLimit;
         ImageView questionMarkSetUnlockTime;
+        ImageView lockStatusIcon;
 
         public SetLimitViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -180,6 +223,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
             questionMarkSetLimit = itemView.findViewById(R.id.questionMarkSetLimit);
             questionMarkSetUnlockTime = itemView.findViewById(R.id.questionMarkSetUnlockTime);
             isUnlockDeviceButton = itemView.findViewById(R.id.unlockDeviceButton);
+            lockStatusIcon = itemView.findViewById(R.id.lockStatusIcon);
         }
     }
 
