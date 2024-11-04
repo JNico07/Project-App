@@ -48,7 +48,7 @@ public class LockService extends Service {
     private Context context;
     Intent controlDetectorServiceIntent;
 
-    private static final long DELAY = 1000;
+    private static final long DELAY = 3000;
 
     private String unlockTime;
     private DateTimeFormatter formatterTime;
@@ -70,20 +70,23 @@ public class LockService extends Service {
         controlDetectorServiceIntent.setAction("STOP_CAMERA");
         startService(controlDetectorServiceIntent);
 
+        controlDetectorServiceIntent.setAction("STOP_TIMER");
+        startService(controlDetectorServiceIntent);
+
         formatterTime = DateTimeFormatter.ofPattern("h:mm a").withLocale(Locale.US);
 
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
-        lockRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (!isServiceStopping && devicePolicyManager.isAdminActive(componentName)) {
-                    devicePolicyManager.lockNow();
-                    handler.postDelayed(this, LOCK_DURATION);
-                }
-            }
-        };
+//        lockRunnable = new Runnable() {
+//            @Override
+//            public void run() {
+//                if (!isServiceStopping && devicePolicyManager.isAdminActive(componentName)) {
+//                    devicePolicyManager.lockNow();
+//                    handler.postDelayed(this, LOCK_DURATION);
+//                }
+//            }
+//        };
 
         handler.postDelayed(new Runnable() {
             @Override
@@ -262,8 +265,13 @@ public class LockService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
         createNotificationChannel();
         Log.d("LockService", "onStartCommand called");
+
+        controlDetectorServiceIntent.setAction("STOP_TIMER");
+        startService(controlDetectorServiceIntent);
+
         if (intent != null) {
             unlockTime = intent.getStringExtra("UNLOCK_TIME");
             if (unlockTime != null && !unlockTime.isEmpty()) {
@@ -297,6 +305,8 @@ public class LockService extends Service {
 
         startForeground(1, notification);
 
+        // Start locking process
+        startLockingProcess();
         return START_STICKY;
     }
 

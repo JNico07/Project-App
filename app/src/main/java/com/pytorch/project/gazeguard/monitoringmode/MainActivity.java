@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.appcompat.widget.Toolbar;
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
@@ -23,12 +22,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -37,7 +34,12 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.pytorch.project.gazeguard.common.ChooseActivity;
+import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 
 import org.pytorch.IValue;
 import org.pytorch.LiteModuleLoader;
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private DevicePolicyManager devicePolicyManager;
     private static final int RESULT_ENABLE = 123;
     private boolean isAdminOn;
+    private FirebaseAuth mAuth;
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
@@ -103,6 +106,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 //        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 //            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
 //        }
+
+        mAuth = FirebaseAuth.getInstance();
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, 1);
@@ -137,8 +142,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             }
         });
 
-
-
         try {
             mModule = LiteModuleLoader.load(MainActivity.assetFilePath(getApplicationContext(), "best.torchscript.ptl"));
             BufferedReader br = new BufferedReader(new InputStreamReader(getAssets().open("classes.txt")));
@@ -153,6 +156,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             Log.e("Object Detection", "Error reading assets", e);
             finish();
         }
+
+        updateLockStatus();
     }
 
 
@@ -265,4 +270,19 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         deviceAdminSwitch.setChecked(isAdminOn);
     }
 
+    private void updateLockStatus() {
+        if (mAuth.getCurrentUser() != null) {
+            String uid = mAuth.getCurrentUser().getUid();
+            String childNumber = SharedPrefsUtil.getChildNumber(this);
+
+            DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users")
+                    .child(uid)
+                    .child("Child")
+                    .child(childNumber)
+                    .child("isDeviceLocked");
+
+            lockStatusRef.setValue(false);
+        }
+    }
 }

@@ -16,7 +16,6 @@ import android.graphics.Matrix;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
 import android.media.Image;
-import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -40,8 +39,6 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
 
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -49,7 +46,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 
@@ -210,6 +206,8 @@ public class DetectorService extends Service implements LifecycleOwner{
                 Log.e("Firebase", "Failed to read unlock status", error.toException());
             }
         });
+
+        updateLockStatus();
     }
 
     //    private int retryCount = 0;
@@ -224,6 +222,8 @@ public class DetectorService extends Service implements LifecycleOwner{
         if (intent != null) {
             String action = intent.getAction();
             switch (Objects.requireNonNull(action)) {
+                case "STOP_TIMER":
+                    stopTimer();
                 case "STOP_CAMERA":
                     stopCameraX();
                     pauseTimer();
@@ -360,35 +360,38 @@ public class DetectorService extends Service implements LifecycleOwner{
         }
     }
 
-
+    private final Object timerLock = new Object();
 
     private void startTimer() {
-        if (!isRunning) {
-            isRunning = true;
-            isPause = true;
-            handler.postDelayed(runnable, 1000);
+        synchronized (timerLock) {
+            if (!isRunning) {
+                isRunning = true;
+                isPause = false;
+                handler.postDelayed(runnable, 1000);
+                Log.d("DetectorService", "Timer started");
+            }
         }
-        else {
-            isPause = false;
-        }
-        saveTimerState();
-        updateTimer(); // Ensure the timer is updated immediately
     }
     private void pauseTimer() {
-        if (isRunning && isPause) {
-            handler.removeCallbacks(runnable);
-            isRunning = false;
-            saveTimerState();
+        synchronized (timerLock) {
+            if (isRunning) {
+                handler.removeCallbacks(runnable);
+                isRunning = false;
+                isPause = true;
+                Log.d("DetectorService", "Timer paused");
+            }
         }
     }
     private void stopTimer() {
-        handler.removeCallbacks(runnable); // Remove any pending callbacks
-        timerSeconds = 0; // Reset timer seconds
-        isRunning = false; // Update the running state
-        saveTimerState(); // Save the state
-        updateNotification("Screen Time Limit Exceeded"); // Update the notification to show reset time
+        synchronized (timerLock) {
+            handler.removeCallbacks(runnable);
+            timerSeconds = 0;
+            isRunning = false;
+            isPause = true;
+            saveTimerState();
+            updateNotification("Screen Time Limit Exceeded");
+        }
     }
-
 
     private void saveTimerState() {
         SharedPreferences.Editor editor = prefsTimer.edit();
@@ -564,12 +567,29 @@ public class DetectorService extends Service implements LifecycleOwner{
         stopService(lockServiceIntent);
         Log.d("DetectorService", "Stop! LockService");
     }
+    private void updateLockStatus() {
+        if (mAuth.getCurrentUser() != null) {
+            String uid = mAuth.getCurrentUser().getUid();
+            String childNumber = SharedPrefsUtil.getChildNumber(this);
+
+            DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference()
+                    .child("Registered Users")
+                    .child(uid)
+                    .child("Child")
+                    .child(childNumber)
+                    .child("isDeviceLocked");
+
+            lockStatusRef.setValue(false);
+        }
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         isDestroyed = true;
         Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
+
+        updateLockStatus();
 
         // Stop the camera
         stopCameraX();
