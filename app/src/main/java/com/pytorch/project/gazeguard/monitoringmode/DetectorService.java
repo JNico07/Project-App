@@ -28,17 +28,21 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.OptIn;
 import androidx.annotation.WorkerThread;
-import androidx.camera.core.CameraX;
-import androidx.camera.core.ImageAnalysis;
-import androidx.camera.core.ImageAnalysisConfig;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ExperimentalGetImage;
 import androidx.camera.core.ImageProxy;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.core.Preview;
+import androidx.camera.core.ImageAnalysis;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -67,6 +71,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 
 public class DetectorService extends Service implements LifecycleOwner{
 
@@ -270,11 +275,12 @@ public class DetectorService extends Service implements LifecycleOwner{
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
+    @NonNull
+    @OptIn(markerClass = ExperimentalGetImage.class)
     @WorkerThread
-    @Nullable
     private EyeTrackerActivity.AnalysisResult analyzeImage(ImageProxy image, int rotationDegrees) {
 
-        Bitmap bitmap = imgToBitmap(image.getImage());
+        Bitmap bitmap = imgToBitmap(Objects.requireNonNull(image.getImage()));
         Matrix matrix = new Matrix();
         matrix.postRotate(270.0f);
         bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
@@ -326,36 +332,52 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private void setupCameraX() {
         try {
-            final ImageAnalysisConfig imageAnalysisConfig = new ImageAnalysisConfig.Builder()
-                    .setLensFacing(CameraX.LensFacing.FRONT)
-                    .setTargetResolution(new Size(480, 640))
-                    .setCallbackHandler(mBackgroundHandler)
-                    .setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-                    .build();
+            ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
+            cameraProviderFuture.addListener(() -> {
+                try {
+                    ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
+                    
+                    final CameraSelector cameraSelector = new CameraSelector.Builder()
+                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                        .build();
 
-            final ImageAnalysis imageAnalysis = new ImageAnalysis(imageAnalysisConfig);
-            imageAnalysis.setAnalyzer((image, rotationDegrees) -> {
-                if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 100) {
-                    return;
+                    final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(480, 640))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+                    imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
+                        @Override
+                        public void analyze(@NonNull ImageProxy image) {
+                            if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 100) {
+                                image.close();
+                                return;
+                            }
+
+                            final EyeTrackerActivity.AnalysisResult result = analyzeImage(image, image.getImageInfo().getRotationDegrees());
+                            mLastAnalysisResultTime = SystemClock.elapsedRealtime();
+                            image.close();
+                        }
+                    });
+
+                    // Unbind any bound use cases before rebinding
+                    cameraProvider.unbindAll();
+                    
+                    // Bind use cases to camera
+                    cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, imageAnalysis);
+                } catch (ExecutionException | InterruptedException e) {
+                    Log.e("CameraX", "Error setting up camera", e);
                 }
-
-                final EyeTrackerActivity.AnalysisResult result = analyzeImage(image, rotationDegrees);
-                if (result != null) {
-                    mLastAnalysisResultTime = SystemClock.elapsedRealtime();
-                }
-            });
-
-            CameraX.bindToLifecycle((LifecycleOwner) this, imageAnalysis);
+            }, ContextCompat.getMainExecutor(this));
         } catch (Exception e) {
-            Log.e("CameraX Setup", "Error setting up CameraX", e);
-            handler.postDelayed(this::setupCameraX, 10000); // Retry in 10 seconds
+            Log.e("CameraX", "Error getting camera provider", e);
         }
     }
+
     private void stopCameraX() {
         try {
-            CameraX.unbindAll();
+            ProcessCameraProvider.getInstance(this).get().unbindAll();
             Log.d("CameraX", "CameraX stopped successfully.");
-        } catch (Exception e) {
+        } catch (ExecutionException | InterruptedException e) {
             Log.e("CameraX", "Error stopping CameraX", e);
         }
     }
