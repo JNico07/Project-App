@@ -1,6 +1,5 @@
 package com.pytorch.project.gazeguard.parentdashboard;
 
-import android.content.DialogInterface;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +18,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.slider.Slider;
 import com.google.android.material.timepicker.MaterialTimePicker;
 import com.google.android.material.timepicker.TimeFormat;
 import com.google.firebase.database.DataSnapshot;
@@ -37,6 +35,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private Handler handler = new Handler(Looper.getMainLooper());
     private Runnable updateLimitTask;
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
+    private int hour, minute;
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -46,12 +45,13 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     @Override
     protected void onBindViewHolder(@NonNull SetLimitViewHolder holder, int position, @NonNull ParentModel model) {
         // Clear existing listeners to avoid triggering events from recycled views
-        holder.slider.clearOnChangeListeners();
+        holder.itemView.setOnClickListener(null);
         holder.userName.setText(model.getName());
 
         // Set the initial slider value based on data in the model
-        holder.slider.setValue(model.getScreenTimeLimit());
-        holder.screenTimeLimit.setText("Limit: " + model.getScreenTimeLimit() + " Hrs");
+        holder.screenTimeLimitTextView.setText("Limit: " + hour + " Hrs " + minute + " Min");
+        holder.deviceUnlockTimeTextView.setText("Unlock Time: " + model.getDeviceUnlockTime());
+
 
         // Add listener for lock status
         DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
@@ -75,8 +75,37 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
             }
         });
 
-        // Time picker button click listener
-        holder.timePickerButton.setOnClickListener(v -> {
+        // SET LIMIT TIME
+        holder.timeLimitPickerButton.setOnClickListener(v -> {
+            MaterialTimePicker picker = new MaterialTimePicker.Builder()
+                    .setTitleText("Select Unlock Time")
+                    .setTimeFormat(TimeFormat.CLOCK_24H)
+                    .build();
+
+            picker.addOnPositiveButtonClickListener(view -> {
+                hour = picker.getHour();
+                minute = picker.getMinute();
+
+                // Convert hours and minutes to total seconds
+                int totalSeconds = (hour * 3600) + (minute * 60);
+
+                holder.screenTimeLimitTextView.setText("Limit: " + hour + " Hrs " + minute + " Min");
+
+                // Set the total seconds as the screen time limit
+                model.setScreenTimeLimit(totalSeconds);
+
+                // Save totalSeconds in Firebase (optional, if needed)
+                FirebaseDatabase.getInstance().getReference("Registered Users")
+                        .child(uid)
+                        .child("Child")
+                        .child(getRef(position).getKey())
+                        .child("screenTimeLimit")
+                        .setValue(totalSeconds);
+            });
+            picker.show(((AppCompatActivity) holder.itemView.getContext()).getSupportFragmentManager(), "timePicker");
+        });
+        // SET UNLOCK TIME
+        holder.timeUnlockPickerButton.setOnClickListener(v -> {
             MaterialTimePicker picker = new MaterialTimePicker.Builder()
                     .setTitleText("Select Unlock Time")
                     .setTimeFormat(TimeFormat.CLOCK_12H)
@@ -86,7 +115,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                 int hour = picker.getHour();
                 int minute = picker.getMinute();
                 String formattedTime = formatTime(hour, minute);
-                holder.deviceUnlockTime.setText("Unlock Time: " + formattedTime);
+                holder.deviceUnlockTimeTextView.setText("Unlock Time: " + formattedTime);
                 model.setDeviceUnlockTime(formattedTime); // Update the model with new unlock time
 
                 // Save the updated unlock time to Firebase
@@ -102,33 +131,11 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
         String deviceUnlockTime = model.getDeviceUnlockTime();
         if (deviceUnlockTime != null) {
-            holder.deviceUnlockTime.setText("Unlock Time: " + deviceUnlockTime);
+            holder.deviceUnlockTimeTextView.setText("Unlock Time: " + deviceUnlockTime);
         } else {
-            holder.deviceUnlockTime.setText("Unlock Time: Not Set");
+            holder.deviceUnlockTimeTextView.setText("Unlock Time: Not Set");
         }
 
-        // Slider listener
-        holder.slider.addOnChangeListener((slider, value, fromUser) -> {
-            if (fromUser) {
-                int setLimit = (int) value;
-                holder.screenTimeLimit.setText("Limit: " + setLimit + " Hrs");
-                model.setScreenTimeLimit(setLimit); // Update model with new limit
-                if (updateLimitTask != null) {
-                    handler.removeCallbacks(updateLimitTask);
-                }
-                updateLimitTask = () -> {
-                    // Save the updated limit value to Firebase
-                    FirebaseDatabase.getInstance().getReference("Registered Users")
-                            .child(uid)
-                            .child("Child")
-                            .child(getRef(position).getKey())
-                            .child("screenTimeLimit")
-                            .setValue(setLimit);
-                };
-                handler.postDelayed(updateLimitTask, 1300);
-
-            }
-        });
 
         // Unlock Button
         holder.isUnlockDeviceButton.setOnClickListener(v -> {
@@ -191,9 +198,6 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         holder.questionMarkSetUnlockTime.setOnClickListener(v ->
                 tooltipFormatter.setToolTip(holder.itemView.getContext(), v, "Here you can set schedule when to remove auto lock to user's device"));
 
-        // Accessibility
-        holder.slider.setOnClickListener(View::performClick);
-
     }
 
     @NonNull
@@ -205,10 +209,9 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
 
     static class SetLimitViewHolder extends RecyclerView.ViewHolder {
         TextView userName;
-        TextView screenTimeLimit;
-        TextView deviceUnlockTime;
-        Slider slider;
-        Button timePickerButton, isUnlockDeviceButton;
+        TextView screenTimeLimitTextView;
+        TextView deviceUnlockTimeTextView;
+        Button timeUnlockPickerButton, timeLimitPickerButton,isUnlockDeviceButton;
         ImageView questionMarkSetLimit;
         ImageView questionMarkSetUnlockTime;
         ImageView lockStatusIcon;
@@ -216,10 +219,10 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         public SetLimitViewHolder(@NonNull View itemView) {
             super(itemView);
             userName = itemView.findViewById(R.id.userName);
-            screenTimeLimit = itemView.findViewById(R.id.screenTimeLimit);
-            deviceUnlockTime = itemView.findViewById(R.id.deviceUnlockTime);
-            slider = itemView.findViewById(R.id.slider);
-            timePickerButton = itemView.findViewById(R.id.timePickerButton);
+            screenTimeLimitTextView = itemView.findViewById(R.id.screenTimeLimitTextView);
+            deviceUnlockTimeTextView = itemView.findViewById(R.id.deviceUnlockTimeTextView);
+            timeUnlockPickerButton = itemView.findViewById(R.id.timeUnlockPickerButton);
+            timeLimitPickerButton = itemView.findViewById(R.id.timeLimitPickerButton);
             questionMarkSetLimit = itemView.findViewById(R.id.questionMarkSetLimit);
             questionMarkSetUnlockTime = itemView.findViewById(R.id.questionMarkSetUnlockTime);
             isUnlockDeviceButton = itemView.findViewById(R.id.unlockDeviceButton);

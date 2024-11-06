@@ -34,19 +34,28 @@
         android:theme="@style/Theme.ProjectApp">
         <activity
             android:name="com.pytorch.project.gazeguard.parentdashboard.ParentDashboardActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
         <activity
             android:name="com.pytorch.project.gazeguard.auth.RegisterActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
         <activity
             android:name="com.pytorch.project.gazeguard.auth.LoginActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
         <activity
             android:name="com.pytorch.project.gazeguard.common.ChooseActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
         <activity
             android:name="com.pytorch.project.gazeguard.common.WelcomeActivity"
             android:exported="true"
+            android:configChanges="orientation"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -67,13 +76,17 @@
 
         <service
             android:name="com.pytorch.project.gazeguard.monitoringmode.DetectorService"
-            android:exported="true"
-            android:foregroundServiceType="camera|dataSync" >
+            android:exported="false"
+            android:foregroundServiceType="camera|dataSync"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait">
         </service>
         <service
             android:name="com.pytorch.project.gazeguard.monitoringmode.LockService"
             android:foregroundServiceType="dataSync"
-            android:exported="true" />
+            android:exported="false"
+            android:configChanges="orientation"
+            android:screenOrientation="portrait"/>
 
         <receiver android:name="com.pytorch.project.gazeguard.monitoringmode.MyDeviceAdminReceiver"
             android:exported="true"

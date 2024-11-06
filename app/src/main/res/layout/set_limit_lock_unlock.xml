@@ -27,8 +27,9 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="User Name"
-                android:textSize="24sp"
-                android:textStyle="bold" />
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:paddingBottom="10dp"/>
 
             <ImageView
                 android:id="@+id/lockStatusIcon"
@@ -49,7 +50,7 @@
             android:layout_marginBottom="16dp">
 
             <TextView
-                android:id="@+id/screenTimeLimit"
+                android:id="@+id/screenTimeLimitTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Limit: 00 Hrs"
@@ -65,16 +66,20 @@
                 android:contentDescription="Question Mark" />
         </LinearLayout>
 
+        <!-- Replace the slider with relevant time input fields -->
+
         <!-- Screen Time Limit Slider -->
-        <com.google.android.material.slider.Slider
-            android:id="@+id/slider"
+        <Button
+            android:id="@+id/timeLimitPickerButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
-            android:stepSize="1.0"
-            android:valueFrom="0.0"
-            android:valueTo="12.0"
-            android:contentDescription="Set Screen Time Limit" />
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="@color/bright_blue"
+            android:padding="12dp"
+            android:text="Set Time Limit"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+
 
         <!-- Unlock Time TextView with Question Mark -->
         <LinearLayout
@@ -84,7 +89,7 @@
             android:layout_marginBottom="8dp">
 
             <TextView
-                android:id="@+id/deviceUnlockTime"
+                android:id="@+id/deviceUnlockTimeTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Unlock Time: 00:00"
@@ -102,7 +107,7 @@
 
         <!-- Time Picker Button -->
         <Button
-            android:id="@+id/timePickerButton"
+            android:id="@+id/timeUnlockPickerButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/bright_blue"
@@ -115,7 +120,7 @@
         <!-- Space Between Buttons -->
         <View
             android:layout_width="match_parent"
-            android:layout_height="20dp" />
+            android:layout_height="30dp" />
 
         <Button
             android:id="@+id/unlockDeviceButton"

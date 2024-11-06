@@ -227,6 +227,9 @@ public class DetectorService extends Service implements LifecycleOwner{
         if (intent != null) {
             String action = intent.getAction();
             switch (Objects.requireNonNull(action)) {
+                case "KILL_SERVICE":
+                    stopSelf();
+                    break;
                 case "STOP_TIMER":
                     stopTimer();
                 case "STOP_CAMERA":
@@ -336,15 +339,15 @@ public class DetectorService extends Service implements LifecycleOwner{
             cameraProviderFuture.addListener(() -> {
                 try {
                     ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
-                    
+
                     final CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                        .build();
+                            .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                            .build();
 
                     final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(480, 640))
-                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .build();
+                            .setTargetResolution(new Size(480, 640))
+                            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                            .build();
                     imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
                         @Override
                         public void analyze(@NonNull ImageProxy image) {
@@ -361,7 +364,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
                     // Unbind any bound use cases before rebinding
                     cameraProvider.unbindAll();
-                    
+
                     // Bind use cases to camera
                     cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, imageAnalysis);
                 } catch (ExecutionException | InterruptedException e) {

@@ -57,11 +57,11 @@ public abstract class AbstractCameraXActivity<T> extends BaseModuleActivity {
         startBackgroundThread();
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
-            != PackageManager.PERMISSION_GRANTED) {
+                != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
-                this,
-                PERMISSIONS,
-                REQUEST_CODE_CAMERA_PERMISSION);
+                    this,
+                    PERMISSIONS,
+                    REQUEST_CODE_CAMERA_PERMISSION);
         } else {
             try {
                 setupCameraX();
@@ -94,19 +94,19 @@ public abstract class AbstractCameraXActivity<T> extends BaseModuleActivity {
 
     private void setupCameraX() throws ExecutionException, InterruptedException {
         final TextureView textureView = getCameraPreviewTextureView();
-        
+
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 final CameraSelector cameraSelector = new CameraSelector.Builder()
-                    .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
-                    .build();
+                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT)
+                        .build();
 
                 final Preview preview = new Preview.Builder()
-                    .build();
-                
+                        .build();
+
                 // Create a surface provider from the TextureView
                 preview.setSurfaceProvider(new Preview.SurfaceProvider() {
                     @Override
@@ -119,9 +119,9 @@ public abstract class AbstractCameraXActivity<T> extends BaseModuleActivity {
                 });
 
                 final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                    .setTargetResolution(new Size(480, 640))
-                    .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                    .build();
+                        .setTargetResolution(new Size(480, 640))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
                 imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
                     @Override
                     public void analyze(@NonNull ImageProxy image) {
@@ -141,7 +141,7 @@ public abstract class AbstractCameraXActivity<T> extends BaseModuleActivity {
 
                 // Unbind any bound use cases before rebinding
                 cameraProvider.unbindAll();
-                
+
                 // Bind use cases to camera
                 cameraProvider.bindToLifecycle((LifecycleOwner)this, cameraSelector, preview, imageAnalysis);
             } catch (ExecutionException | InterruptedException e) {

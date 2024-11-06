@@ -27,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -122,20 +123,22 @@ public class ChildDataFragment extends Fragment {
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         SimpleDateFormat outputDateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
-        // Filter data for the selected year
-        List<Map<String, Object>> filteredData = new ArrayList<>();
+        // Filter and group data by date for the selected year
+        Map<String, Float> aggregatedData = new HashMap<>();
         for (Map<String, Object> record : childDataList) {
             String date = (String) record.get("date");
-            if (year.equals("All") || Objects.requireNonNull(date).startsWith(year)) {
-                filteredData.add(record);
+            if (year.equals("All") || (date != null && date.startsWith(year))) {
+                float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
+                aggregatedData.put(date, aggregatedData.getOrDefault(date, 0f) + screenTime);
             }
         }
 
-        // Sort filteredData in descending order for recordsContainer
-        filteredData.sort((record1, record2) -> {
+        // Sort the aggregated data by date in descending order
+        List<Map.Entry<String, Float>> sortedAggregatedData = new ArrayList<>(aggregatedData.entrySet());
+        sortedAggregatedData.sort((entry1, entry2) -> {
             try {
-                Date date1 = inputDateFormat.parse((String) record1.get("date"));
-                Date date2 = inputDateFormat.parse((String) record2.get("date"));
+                Date date1 = inputDateFormat.parse(entry1.getKey());
+                Date date2 = inputDateFormat.parse(entry2.getKey());
                 return date2.compareTo(date1); // Descending order
             } catch (Exception e) {
                 Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
@@ -143,10 +146,11 @@ public class ChildDataFragment extends Fragment {
             }
         });
 
-        // Populate recordsContainer in descending order
-        for (Map<String, Object> record : filteredData) {
-            String date = (String) record.get("date");
-            float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
+        // Populate recordsContainer with aggregated data
+        int index = 0;
+        for (Map.Entry<String, Float> entry : sortedAggregatedData) {
+            String date = entry.getKey();
+            float totalScreenTime = entry.getValue();
 
             // Inflate and populate the record views
             View recordView = LayoutInflater.from(getContext()).inflate(R.layout.record_item, recordsContainer, false);
@@ -162,44 +166,22 @@ public class ChildDataFragment extends Fragment {
                 dateTextView.setText(date); // Fallback to original date if parsing fails
             }
 
-            screenTimeTextView.setText(formatScreenTime(screenTime));
+            screenTimeTextView.setText(formatScreenTime(totalScreenTime));
             recordsContainer.addView(recordView);
-        }
 
-        // Sort filteredData in ascending order for screenTimeChart
-        filteredData.sort((record1, record2) -> {
-            try {
-                Date date1 = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse((String) record1.get("date"));
-                Date date2 = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse((String) record2.get("date"));
-                assert date1 != null;
-                return date1.compareTo(date2); // Ascending order
-            } catch (Exception e) {
-                Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
-                return 0;
-            }
-        });
-
-        int index = 0;
-        for (Map<String, Object> record : filteredData) {
-            String date = (String) record.get("date");
-            float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
-
-            // Add data entries (index, screenTime) for chart
-            entries.add(new Entry(index++, screenTime));
+            // Add data entries (index, totalScreenTime) for chart
+            entries.add(new Entry(index++, totalScreenTime));
             dates.add(date);
         }
 
         // Update the chart data
-        LineDataSet dataSet = new LineDataSet(entries, "Screen Time");
+        LineDataSet dataSet = new LineDataSet(entries, "Total Screen Time");
         dataSet.setColor(ColorTemplate.COLORFUL_COLORS[0]);
         dataSet.setValueTextColor(ColorTemplate.COLORFUL_COLORS[0]);
 
-        // Apply the formatter to format data point values
         dataSet.setValueFormatter(new ValueFormatterChart());
-
         LineData lineData = new LineData(dataSet);
         screenTimeChart.setData(lineData);
-
 
         // Configure chart X-axis with dates in ascending order
         XAxis xAxis = screenTimeChart.getXAxis();
@@ -216,6 +198,7 @@ public class ChildDataFragment extends Fragment {
 
         screenTimeChart.invalidate(); // Refresh the chart
     }
+
 
 
     private String formatScreenTime(float screenTimeInSeconds) {

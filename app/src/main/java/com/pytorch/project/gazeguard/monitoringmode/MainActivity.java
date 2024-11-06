@@ -34,6 +34,8 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -57,6 +59,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity implements Runnable {
     private int mImageIndex = 0;
@@ -79,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private static final int RESULT_ENABLE = 123;
     private boolean isAdminOn;
     private FirebaseAuth mAuth;
+    private Button buttonLive;
+
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
         File file = new File(context.getFilesDir(), assetName);
@@ -122,7 +127,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         devicePolicyManager = (DevicePolicyManager) getSystemService(DEVICE_POLICY_SERVICE);
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
-        final Button buttonLive = findViewById(R.id.startButton);
+        buttonLive = findViewById(R.id.startButton);
         buttonLive.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
@@ -139,8 +144,52 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                 intent.putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, componentName);
                 intent.putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, "For Lock Screen");
                 startActivityForResult(intent, RESULT_ENABLE);
+            } else {
+                // Prompt for password verification when turning off the admin switch
+                View customView = getLayoutInflater().inflate(R.layout.dialog_password_input, null);
+                TextInputEditText passwordInput = customView.findViewById(R.id.password_input);
+
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("Turn Off Device Admin")
+                        .setMessage("Please Enter your Account Password to turn off device admin")
+                        .setView(customView)
+                        .setPositiveButton("Confirm", (dialog, which) -> {
+                            String password = Objects.requireNonNull(passwordInput.getText()).toString().trim();
+                            if (password.isEmpty()) {
+                                Toast.makeText(this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
+                                // Re-check the switch to "on" since password was not provided
+                                deviceAdminSwitch.setChecked(true);
+                            } else {
+                                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                                FirebaseUser currentUser = mAuth.getCurrentUser();
+                                if (currentUser != null) {
+                                    String email = currentUser.getEmail();
+                                    if (email != null) {
+                                        mAuth.signInWithEmailAndPassword(email, password)
+                                                .addOnCompleteListener(task -> {
+                                                    if (task.isSuccessful()) {
+                                                        // Password is correct, proceed to disable device admin
+                                                        devicePolicyManager.removeActiveAdmin(componentName);
+                                                        Toast.makeText(this, "Device admin turned off", Toast.LENGTH_SHORT).show();
+                                                    } else {
+                                                        // Incorrect password; revert the switch to "on"
+                                                        deviceAdminSwitch.setChecked(true);
+                                                        Toast.makeText(this, "Incorrect password.", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    }
+                                }
+                            }
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> {
+                            dialog.dismiss();
+                            // Re-check the switch to "on" if the dialog is cancelled
+                            deviceAdminSwitch.setChecked(true);
+                        })
+                        .show();
             }
         });
+
 
         try {
             mModule = LiteModuleLoader.load(MainActivity.assetFilePath(getApplicationContext(), "best.torchscript.ptl"));
@@ -211,18 +260,58 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.stop:
-                Toast.makeText(this, "Measuring Screen Time Stopped", Toast.LENGTH_SHORT).show();
+                // Create a custom dialog layout
+                View customView = getLayoutInflater().inflate(R.layout.dialog_password_input, null);
+                TextInputEditText passwordInput = customView.findViewById(R.id.password_input);
+
+                new MaterialAlertDialogBuilder(this)
+                        .setTitle("Stop Measuring Screen Time")
+                        .setMessage("Please Enter your Account Password to Stop Measuring Screen Time.")
+                        .setView(customView)
+                        .setPositiveButton("Confirm", (dialog, which) -> {
+                            String password = Objects.requireNonNull(passwordInput.getText()).toString().trim();
+                            if (password.isEmpty()) {
+                                Toast.makeText(this, "Password cannot be empty", Toast.LENGTH_SHORT).show();
+                            } else {
+                                FirebaseAuth mAuth = FirebaseAuth.getInstance();
+                                FirebaseUser currentUser = mAuth.getCurrentUser();
+                                if (currentUser != null) {
+                                    String email = currentUser.getEmail();
+                                    if (email != null) {
+                                        mAuth.signInWithEmailAndPassword(email, password)
+                                                .addOnCompleteListener(task -> {
+                                                    if (task.isSuccessful()) {
+                                                        // Password is correct, proceed to stop the service
+                                                        Toast.makeText(this, "Measuring Screen Time Stopped", Toast.LENGTH_SHORT).show();
+                                                        Intent detectorService = new Intent(getApplicationContext(), DetectorService.class);
+                                                        detectorService.setAction("KILL_SERVICE");
+                                                        startService(detectorService);
+
+                                                        buttonLive.setEnabled(true);
+                                                        buttonLive.setText("START");
+                                                    } else {
+                                                        Toast.makeText(this, "Incorrect password.", Toast.LENGTH_SHORT).show();
+                                                    }
+                                                });
+                                    }
+                                }
+                            }
+                        })
+                        .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
+                        .show();
                 break;
+
             case R.id.exit:
                 Toast.makeText(this, "Exit", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getApplicationContext(), ChooseActivity.class);
-                startActivity(intent);
+                finishAffinity();
                 break;
+
             default:
                 break;
         }
         return true;
     }
+
 
 
     @Override
@@ -243,8 +332,13 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         if (devicePolicyManager.isAdminActive(componentName)) {
             Intent intentService = new Intent(getApplicationContext(), DetectorService.class);
             intentService.setAction("START_TIMER");
-            Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
             startService(intentService);
+
+            // Make the button unclickable and update the text
+            buttonLive.setEnabled(false);
+            buttonLive.setText("Measuring Screen Time...");
+
+            Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(MainActivity.this, "You need to enable device admin..!", Toast.LENGTH_SHORT).show();
         }
@@ -268,6 +362,23 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         super.onResume();
         isAdminOn = devicePolicyManager.isAdminActive(componentName);
         deviceAdminSwitch.setChecked(isAdminOn);
+
+        // Check if the DetectorService is running and update button state
+        if (isServiceRunning(DetectorService.class)) {
+            Button buttonLive = findViewById(R.id.startButton);
+            buttonLive.setEnabled(false);
+            buttonLive.setText("Measuring Screen Time...");
+        }
+    }
+    // Helper method to check if a service is running
+    private boolean isServiceRunning(Class<?> serviceClass) {
+        android.app.ActivityManager manager = (android.app.ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (android.app.ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void updateLockStatus() {

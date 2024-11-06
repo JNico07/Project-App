@@ -80,13 +80,13 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SetLimitFragment()).commit();
                 break;
 
-            case R.id.nav_settings:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
-                break;
-
-            case R.id.nav_about:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AboutFragment()).commit();
-                break;
+//            case R.id.nav_settings:
+//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
+//                break;
+//
+//            case R.id.nav_about:
+//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AboutFragment()).commit();
+//                break;
 
             case R.id.nav_back:
                 intent = new Intent(getApplicationContext(), ChooseActivity.class);
