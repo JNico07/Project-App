@@ -2,7 +2,7 @@
 <menu
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:showIn = "navigation_view">
+    tools:showIn="navigation_view">
 
     <group
         android:checkableBehavior="single">
@@ -15,14 +15,6 @@
             android:id="@+id/nav_set_limit"
             android:icon="@drawable/baseline_limit"
             android:title="Set Limit &amp; Lock"/>
-<!--        <item-->
-<!--            android:id="@+id/nav_settings"-->
-<!--            android:icon="@drawable/nav_setting"-->
-<!--            android:title="Settings"/>-->
-<!--        <item-->
-<!--            android:id="@+id/nav_about"-->
-<!--            android:icon="@drawable/nav_about"-->
-<!--            android:title="About"/>-->
 
     </group>
 
@@ -41,4 +33,39 @@
         </menu>
 
     </item>
+
+
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item1" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item2" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item3" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item4" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item5" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item6" />
+    <item
+        android:title=""
+        android:enabled="false"
+        android:id="@+id/empty_item7" />
+
+    <item
+        android:id="@+id/eula"
+        android:title="@string/end_user_license_agreement" />
+
 </menu>

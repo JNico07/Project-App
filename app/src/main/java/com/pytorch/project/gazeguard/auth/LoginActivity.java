@@ -22,6 +22,7 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.pytorch.project.gazeguard.common.ChooseActivity;
+import com.pytorch.project.gazeguard.common.EULA;
 import com.pytorch.project.gazeguard.common.WelcomeActivity;
 
 import org.pytorch.demo.objectdetection.R;
@@ -49,6 +50,8 @@ public class LoginActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progressBar);
         textViewRegister = findViewById(R.id.registerNow);
 
+        // Check if EULA needs to be shown
+        EULA();
 
         // on click listener for TextView
         textViewRegister.setOnClickListener(new View.OnClickListener() {
@@ -120,6 +123,23 @@ public class LoginActivity extends AppCompatActivity {
 //            }
 //        });
 
+    }
+    private void EULA() {
+        // Check if EULA needs to be shown
+        if (!EULA.isEULAAccepted(this)) {
+            EULA.showEULA(this, new EULA.EULAListener() {
+                @Override
+                public void onEULAAccepted() {
+                    // Continue with normal login flow
+                }
+
+                @Override
+                public void onEULADeclined() {
+                    // Exit the app
+                    finishAffinity();
+                }
+            });
+        }
     }
 
     // Check if user is already logged in, then it will open the "Choose" Activity

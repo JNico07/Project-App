@@ -18,4 +18,44 @@
     <string name="client_id">740454054560-80h5c4cv8dmg9u1r8qd6jv96ihhln07e.apps.googleusercontent.com</string>
 
     <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="EULA">
+<![CDATA[
+<b>IMPORTANT:</b> This End-User License Agreement ("EULA") is a legal agreement for the use of the GazeGuard mobile application. By downloading, installing, or using GazeGuard, you agree to be bound by the terms of this EULA. If you do not agree to the terms of this EULA, do not download, install, or use GazeGuard.<br/><br/>
+
+<b>1. License Grant and Restrictions</b><br/>
+<b>1.1 License Grant:</b> Company grants you a limited, revocable, non-exclusive, non-transferable, and non-sublicensable license to install and use GazeGuard on a compatible device solely for personal, non-commercial use.<br/>
+<b>1.2 License Restrictions:</b> You agree not to:<br/>
+• Distribute, lease, sublicense, or otherwise transfer the App to any third party.<br/>
+• Reverse engineer, decompile, or attempt to extract the source code from GazeGuard.<br/>
+• Use GazeGuard for any unlawful or prohibited purposes.<br/>
+• Circumvent or attempt to bypass any security measures implemented in the App.<br/><br/>
+
+<b>2. Privacy and Data Collection</b><br/>
+<b>2.1 Data Collection:</b> By using GazeGuard, you agree that the App may collect certain personal data as outlined in our Privacy Policy. This may include, but is not limited to, data related to gaze tracking, screen usage, and device information necessary for the App\'s functionality.<br/>
+<b>2.2 Data Security:</b> GazeGuard employs industry-standard measures to protect your data. However, Company cannot guarantee complete data security, and you agree to use GazeGuard at your own risk.<br/><br/>
+
+<b>3. Ownership and Intellectual Property</b><br/>
+<b>3.1 Intellectual Property:</b> All intellectual property rights in and to GazeGuard and related materials. This EULA does not transfer any ownership rights to you.<br/>
+<b>3.2 Trademarks:</b> You may not use Company\'s trademarks, logos, or other proprietary marks without prior written permission.<br/><br/>
+
+<b>4. Updates and Modifications</b><br/>
+<b>4.1 Updates:</b> GazeGuard may, from time to time, update or modify GazeGuard to improve performance, enhance security, or offer additional features.<br/>
+<b>4.2 EULA Modifications:</b> Company reserves the right to modify this EULA at any time. If a revision is material, we will provide advance notice where possible. Continued use of GazeGuard after modifications constitutes acceptance of the updated terms.<br/><br/>
+
+<b>5. Termination</b><br/>
+<b>5.1 Termination:</b> This EULA will remain in effect until terminated GazeGuard. GazeGuard may, at its discretion, terminate or suspend your access to GazeGuard without notice if you breach any provision of this EULA.<br/>
+<b>5.2 Effect of Termination:</b> Upon termination, you must cease all use of GazeGuard and delete all copies of the App from your devices.<br/><br/>
+
+<b>6. Disclaimers and Limitations of Liability</b><br/>
+<b>6.1 No Warranties:</b> GazeGuard is provided on an "AS IS" and "AS AVAILABLE" basis, without warranties of any kind, either express or implied. Company disclaims all warranties, including but not limited to merchantability, fitness for a particular purpose, and non-infringement.<br/>
+<b>6.2 Limitation of Liability:</b> To the maximum extent permitted by applicable law, GazeGuard shall not be liable for any damages, including but not limited to indirect, incidental, special, consequential, or punitive damages arising out of your use or inability to use GazeGuard.<br/><br/>
+
+<b>7. Entire Agreement</b><br/>
+This EULA constitutes the entire agreement between GazeGuard regarding your use of GazeGuard and supersedes any prior or contemporaneous agreements, communications, or proposals.
+]]>
+    </string>
+    <string name="end_user_license_agreement">
+    <font color="#0096FF"><u>End User License Agreement</u></font>
+</string>
 </resources>

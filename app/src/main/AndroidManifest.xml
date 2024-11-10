@@ -11,18 +11,15 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
-
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
-
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
-
+    <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
 
     <application
         android:name="com.pytorch.project.gazeguard.common.GazeGuard"
@@ -34,28 +31,28 @@
         android:theme="@style/Theme.ProjectApp">
         <activity
             android:name="com.pytorch.project.gazeguard.parentdashboard.ParentDashboardActivity"
-            android:exported="false"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.pytorch.project.gazeguard.auth.RegisterActivity"
-            android:exported="false"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.pytorch.project.gazeguard.auth.LoginActivity"
-            android:exported="false"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.pytorch.project.gazeguard.common.ChooseActivity"
-            android:exported="false"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:exported="false"
+            android:screenOrientation="portrait" />
         <activity
             android:name="com.pytorch.project.gazeguard.common.WelcomeActivity"
-            android:exported="true"
             android:configChanges="orientation"
+            android:exported="true"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -76,28 +73,29 @@
 
         <service
             android:name="com.pytorch.project.gazeguard.monitoringmode.DetectorService"
+            android:configChanges="orientation"
             android:exported="false"
             android:foregroundServiceType="camera|dataSync"
-            android:configChanges="orientation"
-            android:screenOrientation="portrait">
-        </service>
+            android:screenOrientation="portrait" />
         <service
             android:name="com.pytorch.project.gazeguard.monitoringmode.LockService"
-            android:foregroundServiceType="dataSync"
-            android:exported="false"
             android:configChanges="orientation"
-            android:screenOrientation="portrait"/>
+            android:exported="false"
+            android:foregroundServiceType="dataSync"
+            android:screenOrientation="portrait" />
 
-        <receiver android:name="com.pytorch.project.gazeguard.monitoringmode.MyDeviceAdminReceiver"
+        <receiver
+            android:name="com.pytorch.project.gazeguard.monitoringmode.MyDeviceAdminReceiver"
             android:exported="true"
             android:permission="android.permission.BIND_DEVICE_ADMIN">
-            <meta-data android:name="android.app.device_admin"
-                android:resource="@xml/policies"/>
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/policies" />
+
             <intent-filter>
                 <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
             </intent-filter>
         </receiver>
-
     </application>
 
 </manifest>

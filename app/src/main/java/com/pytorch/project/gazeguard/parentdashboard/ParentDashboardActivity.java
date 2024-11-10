@@ -22,6 +22,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.pytorch.project.gazeguard.common.ChooseActivity;
+import com.pytorch.project.gazeguard.common.EULA;
 import com.pytorch.project.gazeguard.common.WelcomeActivity;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.AboutFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment;
@@ -80,14 +81,6 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
                 getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SetLimitFragment()).commit();
                 break;
 
-//            case R.id.nav_settings:
-//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SettingsFragment()).commit();
-//                break;
-//
-//            case R.id.nav_about:
-//                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new AboutFragment()).commit();
-//                break;
-
             case R.id.nav_back:
                 intent = new Intent(getApplicationContext(), ChooseActivity.class);
                 startActivity(intent);
@@ -98,6 +91,20 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
                 FirebaseAuth.getInstance().signOut();
                 intent = new Intent(getApplicationContext(), WelcomeActivity.class);
                 startActivity(intent);
+                break;
+
+            case R.id.eula:
+                EULA.showEULA(this, new EULA.EULAListener() {
+                    @Override
+                    public void onEULAAccepted() {
+                        // Continue
+                    }
+                    @Override
+                    public void onEULADeclined() {
+                        // Exit the app
+                        finishAffinity();
+                    }
+                });
                 break;
         }
         drawerLayout.closeDrawer(GravityCompat.START);

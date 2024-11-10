@@ -46,12 +46,12 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     protected void onBindViewHolder(@NonNull SetLimitViewHolder holder, int position, @NonNull ParentModel model) {
         // Clear existing listeners to avoid triggering events from recycled views
         holder.itemView.setOnClickListener(null);
+
         holder.userName.setText(model.getName());
 
         // Set the initial slider value based on data in the model
-        holder.screenTimeLimitTextView.setText("Limit: " + hour + " Hrs " + minute + " Min");
+        holder.screenTimeLimitTextView.setText("Limit: " + formatScreenTimeLimit(model.getScreenTimeLimit()));
         holder.deviceUnlockTimeTextView.setText("Unlock Time: " + model.getDeviceUnlockTime());
-
 
         // Add listener for lock status
         DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
@@ -235,5 +235,12 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         int hour = (hourOfDay == 0 || hourOfDay == 12) ? 12 : hourOfDay % 12;
         String formattedMinute = (minute < 10) ? "0" + minute : String.valueOf(minute);
         return hour + ":" + formattedMinute + " " + amPm;
+    }
+
+    // Method to convert total seconds to hours and minutes
+    private String formatScreenTimeLimit(int totalSeconds) {
+        int hours = totalSeconds / 3600;
+        int minutes = (totalSeconds % 3600) / 60;
+        return hours + " Hrs " + minutes + " Min";
     }
 }
