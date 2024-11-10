@@ -107,6 +107,8 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
                                                 .addToBackStack(null)
                                                 .commit();
 
+
+
                                         listener.onHideProgressBar();
                                     })
                                     .addOnFailureListener(e -> {

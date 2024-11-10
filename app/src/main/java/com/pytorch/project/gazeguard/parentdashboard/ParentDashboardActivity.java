@@ -1,5 +1,7 @@
 package com.pytorch.project.gazeguard.parentdashboard;
 
+import static com.pytorch.project.gazeguard.common.RecommendationsManager.showRecommendationsDialog;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -7,29 +9,39 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.pytorch.project.gazeguard.common.ChooseActivity;
 import com.pytorch.project.gazeguard.common.EULA;
+import com.pytorch.project.gazeguard.common.RecommendationsAdapter;
+import com.pytorch.project.gazeguard.common.RecommendationsManager;
 import com.pytorch.project.gazeguard.common.WelcomeActivity;
+import com.pytorch.project.gazeguard.parentdashboard.childdatafragment.ChildDataFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.AboutFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SetLimitFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SettingsFragment;
 
 import org.pytorch.demo.objectdetection.R;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawerLayout;
@@ -74,11 +86,19 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.nav_home:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new HomeFragment()).commit();
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new HomeFragment())
+                        .commit();
+                // Force toolbar menu update
+                invalidateOptionsMenu();
                 break;
 
             case R.id.nav_set_limit:
-                getSupportFragmentManager().beginTransaction().replace(R.id.fragment_container, new SetLimitFragment()).commit();
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.fragment_container, new SetLimitFragment())
+                        .commit();
+                // Force toolbar menu update
+                invalidateOptionsMenu();
                 break;
 
             case R.id.nav_back:
@@ -157,5 +177,30 @@ public class ParentDashboardActivity extends AppCompatActivity implements Naviga
 //        onBackPressed();
 //        return true;
 //    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+
+        // Get current fragment
+        Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
+
+        // Hide recommendations icon by default
+        MenuItem recommendationsItem = menu.findItem(R.id.action_recommendations);
+        if (recommendationsItem != null) {
+            recommendationsItem.setVisible(true);
+        }
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.action_recommendations) {
+            showRecommendationsDialog(this);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
 }

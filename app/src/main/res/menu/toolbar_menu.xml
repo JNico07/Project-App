@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/stop"
-        android:title="Stop"/>
-    <item
-        android:id="@+id/exit"
-        android:title="Exit"/>
-
+        android:id="@+id/action_recommendations"
+        android:icon="@drawable/feedback"
+        android:title="Recommendations"
+        app:showAsAction="always"/>
 </menu>

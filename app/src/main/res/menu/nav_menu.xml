@@ -59,10 +59,6 @@
         android:title=""
         android:enabled="false"
         android:id="@+id/empty_item6" />
-    <item
-        android:title=""
-        android:enabled="false"
-        android:id="@+id/empty_item7" />
 
     <item
         android:id="@+id/eula"
