@@ -557,7 +557,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
 //                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                            screenTimeLimitInSeconds = screenTimeLimit;
+                            screenTimeLimitInSeconds = 10;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
