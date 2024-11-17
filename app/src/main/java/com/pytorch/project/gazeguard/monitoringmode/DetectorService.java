@@ -41,6 +41,8 @@ import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.LifecycleRegistry;
+import androidx.camera.core.resolutionselector.ResolutionSelector;
+import androidx.camera.core.resolutionselector.ResolutionStrategy;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.firebase.auth.FirebaseAuth;
@@ -72,6 +74,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 public class DetectorService extends Service implements LifecycleOwner{
 
@@ -100,6 +104,18 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private int screenTimeLimitInSeconds;
 
+    private ScheduledExecutorService executorService;
+
+    // Adjusted constants for optimization
+    private static final int FRAME_SKIP_COUNT = 300; // Skip more frames to reduce CPU usage
+    private static final long MIN_ANALYSIS_INTERVAL = 5000; // # seconds between analyses
+    private static final int TARGET_ANALYSIS_WIDTH = 400; // Smaller resolution
+    private static final int TARGET_ANALYSIS_HEIGHT = 400;
+
+    private int frameCounter = 0;
+    private long lastFpsTimestamp = 0;
+    private static final int FPS_CALC_INTERVAL = 1000; // Calculate FPS every second
+
     public DetectorService() {
     }
 
@@ -126,7 +142,7 @@ public class DetectorService extends Service implements LifecycleOwner{
         updateNotification(time);
 
         // Store the timer value in Firebase Realtime Database
-        if (mDatabase != null) {
+        if (mDatabase != null && seconds == 0) {
             mDatabase.setValue(time); // Store the formatted time
         }
     }
@@ -275,6 +291,11 @@ public class DetectorService extends Service implements LifecycleOwner{
         yuvImage.compressToJpeg(new Rect(0, 0, yuvImage.getWidth(), yuvImage.getHeight()), 75, out);
 
         byte[] imageBytes = out.toByteArray();
+        try {
+            out.close(); // Close the stream to free resources
+        } catch (IOException e) {
+            Log.e("DetectorService", "Error closing ByteArrayOutputStream", e);
+        }
         return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
     }
 
@@ -282,40 +303,35 @@ public class DetectorService extends Service implements LifecycleOwner{
     @OptIn(markerClass = ExperimentalGetImage.class)
     @WorkerThread
     private EyeTrackerActivity.AnalysisResult analyzeImage(ImageProxy image, int rotationDegrees) {
-
         Bitmap bitmap = imgToBitmap(Objects.requireNonNull(image.getImage()));
-        Matrix matrix = new Matrix();
-        matrix.postRotate(270.0f);
-        bitmap = Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, PrePostProcessor.mInputWidth, PrePostProcessor.mInputHeight, true);
+
+        // Directly scale to target size in one step
+        Bitmap resizedBitmap = Bitmap.createScaledBitmap(
+            bitmap,
+            PrePostProcessor.mInputWidth,
+            PrePostProcessor.mInputHeight,
+            false  // bilinear filtering instead of bicubic
+        );
+
+        // Recycle the original bitmap only after ensuring resizedBitmap is created
+        if (!bitmap.isRecycled()) {
+            bitmap.recycle();
+        }
 
         final Tensor inputTensor = TensorImageUtils.bitmapToFloat32Tensor(resizedBitmap, PrePostProcessor.NO_MEAN_RGB, PrePostProcessor.NO_STD_RGB);
         IValue[] outputTuple = mModule.forward(IValue.from(inputTensor)).toTuple();
         final Tensor outputTensor = outputTuple[0].toTensor();
         final float[] outputs = outputTensor.getDataAsFloatArray();
 
-        float imgScaleX = (float)bitmap.getWidth() / PrePostProcessor.mInputWidth;
-        float imgScaleY = (float)bitmap.getHeight() / PrePostProcessor.mInputHeight;
+        float imgScaleX = (float)resizedBitmap.getWidth() / PrePostProcessor.mInputWidth;
+        float imgScaleY = (float)resizedBitmap.getHeight() / PrePostProcessor.mInputHeight;
 
-        float ivScaleX = 1.0f;
-        float ivScaleY = 1.0f;
-        if (mResultView != null) {
-            ivScaleX = (float) mResultView.getWidth() / bitmap.getWidth();
-            ivScaleY = (float) mResultView.getHeight() / bitmap.getHeight();
+        // Recycle the resized bitmap after use
+        if (!resizedBitmap.isRecycled()) {
+            resizedBitmap.recycle();
         }
 
-        final ArrayList<Result> results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, ivScaleX, ivScaleY, 0, 0);
-
-
-//        // Log detected classes and scores
-//        for (Result result : results) {
-//            detectedClassName = PrePostProcessor.mClasses[result.classIndex];
-//
-////            Log.d("Object Detection", "Detected class: " + PrePostProcessor.mClasses[result.classIndex] + ", Score: " + result.score);
-////            Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
-//
-//            eyeTimeTracker();
-//        }
+        final ArrayList<Result> results = PrePostProcessor.outputsToNMSPredictions(outputs, imgScaleX, imgScaleY, 1.0f, 1.0f, 0, 0);
 
         // Process detected results
         detectedClassName = results.isEmpty() ? "unknown" : PrePostProcessor.mClasses[results.get(0).classIndex];
@@ -324,13 +340,11 @@ public class DetectorService extends Service implements LifecycleOwner{
         eyeTimeTracker();
 
         return new EyeTrackerActivity.AnalysisResult(results);
-
     }
 
     private void startBackgroundThread() {
-        mBackgroundThread = new HandlerThread("CameraXBackground");
-        mBackgroundThread.start();
-        mBackgroundHandler = new Handler(mBackgroundThread.getLooper());
+
+        executorService = Executors.newSingleThreadScheduledExecutor();
     }
 
     private void setupCameraX() {
@@ -345,13 +359,36 @@ public class DetectorService extends Service implements LifecycleOwner{
                             .build();
 
                     final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                            .setTargetResolution(new Size(480, 640))
+                            .setResolutionSelector(new ResolutionSelector.Builder()
+                                .setResolutionStrategy(new ResolutionStrategy(
+                                    new Size(TARGET_ANALYSIS_WIDTH, TARGET_ANALYSIS_HEIGHT),
+                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER))
+                                .build())
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build();
-                    imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
+
+                    imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), new ImageAnalysis.Analyzer() {
+                        private int frameCounter = 0;
                         @Override
                         public void analyze(@NonNull ImageProxy image) {
-                            if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < 100) {
+
+                            // Calculate FPS
+//                            frameCounter++;
+//                            long currentTime = SystemClock.elapsedRealtime();
+//                            if (currentTime - lastFpsTimestamp >= FPS_CALC_INTERVAL) {
+//                                int fps = frameCounter * 1000 / (int)(currentTime - lastFpsTimestamp);
+//                                Log.d("CameraX", "FPS: " + fps);
+//                                frameCounter = 0;
+//                                lastFpsTimestamp = currentTime;
+//                            }
+
+                            // Increase frame skipping and minimum time between analyses
+                            if (frameCounter % FRAME_SKIP_COUNT != 0) {
+                                image.close();
+                                return;
+                            }
+
+                            if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < MIN_ANALYSIS_INTERVAL) {
                                 image.close();
                                 return;
                             }
@@ -557,7 +594,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                         Integer screenTimeLimit = snapshot.getValue(Integer.class);
                         if (screenTimeLimit != null) {
 //                            screenTimeLimitInSeconds = screenTimeLimit * 3600;
-                            screenTimeLimitInSeconds = 10;
+                            screenTimeLimitInSeconds = screenTimeLimit;
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
@@ -657,6 +694,10 @@ public class DetectorService extends Service implements LifecycleOwner{
         if (mModule != null) {
             mModule.destroy();
             mModule = null;
+        }
+
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
         }
 
         // Set the Lifecycle state to DESTROYED

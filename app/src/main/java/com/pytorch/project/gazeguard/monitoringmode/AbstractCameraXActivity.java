@@ -119,7 +119,7 @@ public abstract class AbstractCameraXActivity<T> extends BaseModuleActivity {
                 });
 
                 final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        .setTargetResolution(new Size(480, 640))
+                        .setTargetResolution(new Size(416, 416))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build();
                 imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(this), new ImageAnalysis.Analyzer() {
