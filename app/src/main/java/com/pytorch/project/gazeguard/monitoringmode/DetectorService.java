@@ -108,7 +108,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     // Adjusted constants for optimization
     private static final int FRAME_SKIP_COUNT = 300; // Skip more frames to reduce CPU usage
-    private static final long MIN_ANALYSIS_INTERVAL = 6000; // # seconds between analyses
+    private static final long MIN_ANALYSIS_INTERVAL = 5000; // # seconds between analyses
     private static final int TARGET_ANALYSIS_WIDTH = 400; // Smaller resolution
     private static final int TARGET_ANALYSIS_HEIGHT = 400;
 

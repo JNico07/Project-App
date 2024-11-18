@@ -9,7 +9,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.annotation.SuppressLint;
@@ -17,31 +16,21 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.pytorch.project.gazeguard.common.ChooseActivity;
 import com.pytorch.project.gazeguard.common.EULA;
-import com.pytorch.project.gazeguard.common.RecommendationsAdapter;
-import com.pytorch.project.gazeguard.common.RecommendationsManager;
 import com.pytorch.project.gazeguard.common.WelcomeActivity;
-import com.pytorch.project.gazeguard.parentdashboard.childdatafragment.ChildDataFragment;
-import com.pytorch.project.gazeguard.parentdashboard.optionfragments.AboutFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.HomeFragment;
 import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SetLimitFragment;
-import com.pytorch.project.gazeguard.parentdashboard.optionfragments.SettingsFragment;
 
 import org.pytorch.demo.objectdetection.R;
-
-import java.util.Arrays;
-import java.util.List;
 
 public class ParentDashboardActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
     private DrawerLayout drawerLayout;

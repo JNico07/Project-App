@@ -139,10 +139,23 @@ import java.util.Random;
             @Override
             public void onClick(View v) {
                 String dateCreated = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(new Date());
-                String childUserName = String.valueOf(editTextUserName.getText());
+                String childUserName = String.valueOf(editTextUserName.getText()).trim();
 
+                // Input validation
                 if (TextUtils.isEmpty(childUserName)) {
                     Toast.makeText(ChooseActivity.this, "Please enter Username", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Check for spaces only
+                if (childUserName.matches("^\\s*$")) {
+                    Toast.makeText(ChooseActivity.this, "Username cannot contain only spaces", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Check for valid username pattern (letters, numbers, and underscores only)
+                if (!childUserName.matches("^[a-zA-Z0-9_]+$")) {
+                    Toast.makeText(ChooseActivity.this, "can only contain letters, numbers, underscores", Toast.LENGTH_SHORT).show();
                     return;
                 }
 

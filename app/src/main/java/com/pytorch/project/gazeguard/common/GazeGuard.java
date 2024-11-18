@@ -1,7 +1,6 @@
 package com.pytorch.project.gazeguard.common;
 
 import android.app.Application;
-import android.util.Log;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.appcheck.FirebaseAppCheck;
@@ -9,7 +8,6 @@ import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderF
 import com.pytorch.project.gazeguard.notifications.DeviceLockNotificationService;
 
 public class GazeGuard extends Application {
-    private static final String TAG = "GazeGuardApp";
 
     @Override
     public void onCreate() {
