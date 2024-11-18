@@ -108,7 +108,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     // Adjusted constants for optimization
     private static final int FRAME_SKIP_COUNT = 300; // Skip more frames to reduce CPU usage
-    private static final long MIN_ANALYSIS_INTERVAL = 5000; // # seconds between analyses
+    private static final long MIN_ANALYSIS_INTERVAL = 6000; // # seconds between analyses
     private static final int TARGET_ANALYSIS_WIDTH = 400; // Smaller resolution
     private static final int TARGET_ANALYSIS_HEIGHT = 400;
 
@@ -430,7 +430,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                 isRunning = true;
                 isPause = false;
                 handler.postDelayed(runnable, 1000);
-                Log.d("DetectorService", "Timer started");
+//                Log.d("DetectorService", "Timer started");
             }
         }
     }
@@ -440,7 +440,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                 handler.removeCallbacks(runnable);
                 isRunning = false;
                 isPause = true;
-                Log.d("DetectorService", "Timer paused");
+//                Log.d("DetectorService", "Timer paused");
             }
         }
     }
@@ -497,7 +497,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 
 
     private void eyeTimeTracker() {
-        Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
+//        Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
 
         if (isLooking() && !isRunning) {
             startTimer();
@@ -598,7 +598,7 @@ public class DetectorService extends Service implements LifecycleOwner{
                         } else {
                             screenTimeLimitInSeconds = Integer.MAX_VALUE; // set a default value
                         }
-                        Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
+//                        Log.d("Firebase", "Screen time limit: " + screenTimeLimitInSeconds);
                     }
                 }
                 @Override
@@ -612,7 +612,7 @@ public class DetectorService extends Service implements LifecycleOwner{
     Intent intentLockService;
     private void checkScreenTimeLimit() {
         if (timerSeconds >= screenTimeLimitInSeconds) {
-            Log.d("Screen time limit", "Time Limit Exceeds " + screenTimeLimitInSeconds + " seconds");
+//            Log.d("Screen time limit", "Time Limit Exceeds " + screenTimeLimitInSeconds + " seconds");
             pauseTimer();
             resetTimer();
 
@@ -620,14 +620,14 @@ public class DetectorService extends Service implements LifecycleOwner{
             intentLockService = new Intent(context, LockService.class);
             startForegroundService(intentLockService);
         } else {
-            Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
+//            Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
         }
     }
 
     private void stopLockService() {
         Intent lockServiceIntent = new Intent(this, LockService.class);
         stopService(lockServiceIntent);
-        Log.d("DetectorService", "Stop! LockService");
+//        Log.d("DetectorService", "Stop! LockService");
     }
     private void updateLockStatus() {
         if (mAuth.getCurrentUser() != null) {
