@@ -64,9 +64,9 @@ public class ParentAdapter extends FirebaseRecyclerAdapter<ParentModel, ParentAd
 
         Glide.with(myViewHolder.img.getContext())
                 .load(parentModel.getSurl())
-                .placeholder(R.drawable.person)
+                .placeholder(R.drawable.baseline_person_24)
                 .circleCrop()
-                .error(R.drawable.person)
+                .error(R.drawable.baseline_person_24)
                 .into(myViewHolder.img);
 
         myViewHolder.itemView.setOnClickListener(v -> {

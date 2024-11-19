@@ -1,11 +1,13 @@
     package com.pytorch.project.gazeguard.common;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
@@ -14,6 +16,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -32,6 +35,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Random;
+
+import android.Manifest;
+import android.os.Build;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
     public class ChooseActivity extends AppCompatActivity {
 
@@ -52,6 +60,7 @@ import java.util.Random;
     private static final String PREF_USERNAME_KEY = "username";
     private static final String PREF_USERNAME_SET_KEY = "username_set";
     private static final String PREF_CHILD_NUMBER_KEY = "child_number"; // Define a key for child number
+    private static final int NOTIFICATION_PERMISSION_CODE = 123;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,6 +107,8 @@ import java.util.Random;
                 }
             }
         });
+
+        checkNotificationPermission();
     }
     private void EULA() {
         // Check if EULA needs to be shown
@@ -195,6 +206,53 @@ import java.util.Random;
         return "child" + number;
     }
 
+    private void checkNotificationPermission() {
+        // Only need to request permission on Android 13 and higher
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                    != PackageManager.PERMISSION_GRANTED) {
+                
+                // Show explanation dialog if needed
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this, 
+                        Manifest.permission.POST_NOTIFICATIONS)) {
+                    new MaterialAlertDialogBuilder(this)
+                            .setTitle("Notification Permission Required")
+                            .setMessage("GazeGuard needs notification permission to keep you informed about screen time tracking and important alerts.")
+                            .setPositiveButton("Grant Permission", (dialog, which) -> {
+                                requestNotificationPermission();
+                            })
+                            .setNegativeButton("Not Now", (dialog, which) -> {
+                                Toast.makeText(this, "Some features may be limited without notifications", 
+                                        Toast.LENGTH_LONG).show();
+                            })
+                            .show();
+                } else {
+                    requestNotificationPermission();
+                }
+            }
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.TIRAMISU)
+    private void requestNotificationPermission() {
+        ActivityCompat.requestPermissions(this,
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                NOTIFICATION_PERMISSION_CODE);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, 
+            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Notification permission granted", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "Some features may be limited without notifications", 
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {

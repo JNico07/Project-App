@@ -37,6 +37,10 @@ public class RegisterActivity extends AppCompatActivity {
     ProgressBar progressBar;
     TextView textView;
 
+    // Add this method near the top of the class
+    private boolean containsOnlySpecialCharsOrSpaces(String str) {
+        return !str.matches(".*[a-zA-Z].*");
+    }
 
     // Check if user is already logged in, then it will open the Main Activity
 //    @Override
@@ -81,13 +85,13 @@ public class RegisterActivity extends AppCompatActivity {
                 progressBar.setVisibility(View.VISIBLE);
                 // read text from EditText
                 String full_name, email, password;
-                full_name = String.valueOf(editTextFullName.getText());
-                email = String.valueOf(editTextEmail.getText());
-                password = String.valueOf(editTextPassword.getText());
+                full_name = String.valueOf(editTextFullName.getText()).trim();
+                email = String.valueOf(editTextEmail.getText()).trim();
+                password = String.valueOf(editTextPassword.getText()).trim();
 
                 // check if Email or Password is empty or not
-                if (TextUtils.isEmpty(full_name)) {
-                    Toast.makeText(RegisterActivity.this, "Enter Name", Toast.LENGTH_SHORT).show();
+                if (TextUtils.isEmpty(full_name) || containsOnlySpecialCharsOrSpaces(full_name)) {
+                    Toast.makeText(RegisterActivity.this, "Please enter a valid name", Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
                     return;
                 }

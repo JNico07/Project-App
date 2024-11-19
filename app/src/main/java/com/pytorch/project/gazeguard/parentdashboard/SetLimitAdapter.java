@@ -36,6 +36,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private Runnable updateLimitTask;
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
     private int hour, minute;
+    private DatabaseReference lockStatusRef, unlockTimeRef;
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -54,7 +55,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         holder.deviceUnlockTimeTextView.setText("Unlock Time: " + model.getDeviceUnlockTime());
 
         // Add listener for lock status
-        DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
+        lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
                 .child(uid)
                 .child("Child")
                 .child(getRef(position).getKey())
@@ -72,6 +73,29 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e("SetLimitAdapter", "Error reading lock status", error.toException());
+            }
+        });
+
+        unlockTimeRef = FirebaseDatabase.getInstance().getReference("Registered Users")
+                .child(uid)
+                .child("Child")
+                .child(getRef(position).getKey())
+                .child("deviceUnlockTime");
+        unlockTimeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                String unlockTime = snapshot.getValue(String.class);
+                if (unlockTime == null) {
+                    // Set default value if null
+                    unlockTimeRef.setValue("5:00 AM");
+                    model.setDeviceUnlockTime("5:00 AM");
+                    holder.deviceUnlockTimeTextView.setText("Unlock Time: 5:00 AM");
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e("SetLimitAdapter", "Error reading unlock time", error.toException());
             }
         });
 

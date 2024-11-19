@@ -107,10 +107,10 @@ public class DetectorService extends Service implements LifecycleOwner{
     private ScheduledExecutorService executorService;
 
     // Adjusted constants for optimization
-    private static final int FRAME_SKIP_COUNT = 300; // Skip more frames to reduce CPU usage
-    private static final long MIN_ANALYSIS_INTERVAL = 5000; // # seconds between analyses
-    private static final int TARGET_ANALYSIS_WIDTH = 400; // Smaller resolution
-    private static final int TARGET_ANALYSIS_HEIGHT = 400;
+    private static final int FRAME_SKIP_COUNT = 18; // Skip more frames to reduce CPU usage
+    private static final long MIN_ANALYSIS_INTERVAL = 3000; // # seconds between analyses
+    private static final int TARGET_ANALYSIS_WIDTH = 640; // Smaller resolution
+    private static final int TARGET_ANALYSIS_HEIGHT = 640;
 
     private int frameCounter = 0;
     private long lastFpsTimestamp = 0;
@@ -142,7 +142,7 @@ public class DetectorService extends Service implements LifecycleOwner{
         updateNotification(time);
 
         // Store the timer value in Firebase Realtime Database
-        if (mDatabase != null && seconds == 0) {
+        if (mDatabase != null) {
             mDatabase.setValue(time); // Store the formatted time
         }
     }

@@ -74,9 +74,6 @@ public class ChildDataFragment extends Fragment {
             childNameTextView.setText(childName);
 
             if (childDataList != null) {
-                // Show recommendations dialog automatically when data is loaded
-                showRecommendationsDialog(requireActivity());
-
                 // Set up unique years from data
                 Set<String> uniqueYears = new HashSet<>();
                 SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
