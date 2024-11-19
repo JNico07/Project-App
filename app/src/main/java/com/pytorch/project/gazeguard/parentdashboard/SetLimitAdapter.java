@@ -10,6 +10,11 @@ import android.widget.TextView;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.Context;
+import androidx.core.app.NotificationCompat;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -37,6 +42,9 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
     private int hour, minute;
     private DatabaseReference lockStatusRef, unlockTimeRef;
+    private static final String CHANNEL_ID = "device_lock_channel";
+    private static final int NOTIFICATION_ID = 1001;
+    private boolean isLockedLocalCheck = false;
 
     public SetLimitAdapter(@NonNull FirebaseRecyclerOptions<ParentModel> options, String uid) {
         super(options);
@@ -66,8 +74,14 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                 Boolean isLocked = snapshot.getValue(Boolean.class);
                 if (isLocked != null && isLocked) {
                     holder.lockStatusIcon.setVisibility(View.VISIBLE);
+
+                    isLockedLocalCheck = true;
+
+                    // Show notification when device is locked
+                    showDeviceLockNotification(holder.itemView.getContext(), model.getName());
                 } else {
                     holder.lockStatusIcon.setVisibility(View.GONE);
+                    isLockedLocalCheck = false;
                 }
             }
             @Override
@@ -168,7 +182,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
                     Boolean isLocked = snapshot.getValue(Boolean.class);
-                    if (isLocked != null && isLocked) {
+                    if (isLocked != null && isLocked || isLockedLocalCheck) {
                         // Show the Material Dialog if the device is locked
                         new MaterialAlertDialogBuilder(holder.itemView.getContext())
                                 .setTitle("Unlock Device")
@@ -266,5 +280,29 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         int hours = totalSeconds / 3600;
         int minutes = (totalSeconds % 3600) / 60;
         return hours + " Hrs " + minutes + " Min";
+    }
+
+    private void showDeviceLockNotification(Context context, String userName) {
+        NotificationManager notificationManager = 
+            (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        NotificationChannel channel = new NotificationChannel(
+            CHANNEL_ID,
+            "Device Lock Notifications",
+            NotificationManager.IMPORTANCE_DEFAULT
+        );
+        channel.setDescription("Notifications for when a child's device is locked");
+        notificationManager.createNotificationChannel(channel);
+
+        // Build the notification
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
+                .setSmallIcon(R.drawable.notification_important)
+                .setContentTitle("Device Locked")
+                .setContentText(userName + " reach Screen Time Limit, device has been locked")
+                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setAutoCancel(true);
+
+        // Show the notification
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
     }
 }
