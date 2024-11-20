@@ -41,7 +41,6 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
     private Runnable updateLimitTask;
     TooltipFormatter tooltipFormatter = new TooltipFormatter();
     private int hour, minute;
-    private DatabaseReference lockStatusRef, unlockTimeRef;
     private static final String CHANNEL_ID = "device_lock_channel";
     private static final int NOTIFICATION_ID = 1001;
     private boolean isLockedLocalCheck = false;
@@ -63,7 +62,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
         holder.deviceUnlockTimeTextView.setText("Unlock Time: " + model.getDeviceUnlockTime());
 
         // Add listener for lock status
-        lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
+        DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference("Registered Users")
                 .child(uid)
                 .child("Child")
                 .child(getRef(position).getKey())
@@ -75,41 +74,15 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                 if (isLocked != null && isLocked) {
                     holder.lockStatusIcon.setVisibility(View.VISIBLE);
 
-                    isLockedLocalCheck = true;
-
                     // Show notification when device is locked
                     showDeviceLockNotification(holder.itemView.getContext(), model.getName());
                 } else {
                     holder.lockStatusIcon.setVisibility(View.GONE);
-                    isLockedLocalCheck = false;
                 }
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.e("SetLimitAdapter", "Error reading lock status", error.toException());
-            }
-        });
-
-        unlockTimeRef = FirebaseDatabase.getInstance().getReference("Registered Users")
-                .child(uid)
-                .child("Child")
-                .child(getRef(position).getKey())
-                .child("deviceUnlockTime");
-        unlockTimeRef.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                String unlockTime = snapshot.getValue(String.class);
-                if (unlockTime == null) {
-                    // Set default value if null
-                    unlockTimeRef.setValue("5:00 AM");
-                    model.setDeviceUnlockTime("5:00 AM");
-                    holder.deviceUnlockTimeTextView.setText("Unlock Time: 5:00 AM");
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.e("SetLimitAdapter", "Error reading unlock time", error.toException());
             }
         });
 

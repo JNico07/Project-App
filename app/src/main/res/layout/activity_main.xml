@@ -30,15 +30,28 @@
             android:gravity="center"
             android:orientation="vertical">
 
-            <Button
-                android:id="@+id/startButton"
+            <FrameLayout
                 android:layout_width="330dp"
-                android:layout_height="320dp"
-                android:padding="16dp"
-                android:text="@string/Start"
-                android:textAllCaps="true"
-                android:textSize="30sp"
-                android:textStyle="bold" />
+                android:layout_height="320dp">
+
+                <Button
+                    android:id="@+id/startButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp"
+                    android:text="@string/Start"
+                    android:textAllCaps="true"
+                    android:textSize="30sp"
+                    android:textStyle="bold" />
+
+                <ProgressBar
+                    android:id="@+id/buttonProgressBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:visibility="gone" />
+
+            </FrameLayout>
 
         </LinearLayout>
 

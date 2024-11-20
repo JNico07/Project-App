@@ -83,6 +83,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private boolean isAdminOn;
     private FirebaseAuth mAuth;
     private Button buttonLive;
+    private ProgressBar buttonProgressBar;
+    private boolean isRestart = false;
 
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
@@ -128,12 +130,28 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         componentName = new ComponentName(this, MyDeviceAdminReceiver.class);
 
         buttonLive = findViewById(R.id.startButton);
+        buttonProgressBar = findViewById(R.id.buttonProgressBar);
+        
         buttonLive.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
                 } else {
                     startDetectorService();
+
+                    // Show loading state
+                    buttonLive.setVisibility(View.INVISIBLE);
+                    buttonProgressBar.setVisibility(View.VISIBLE);
+                    
+                    // Use different delay based on whether it's a restart
+                    int delayDuration = isRestart ? 20000 : 5000;
+                    
+                    // Delay for specified duration
+                    new Handler().postDelayed(() -> {
+                        buttonProgressBar.setVisibility(View.GONE);
+                        buttonLive.setVisibility(View.VISIBLE);
+                        isRestart = false;  // Reset the flag after use
+                    }, delayDuration);
                 }
             }
         });
@@ -289,6 +307,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
                                                         buttonLive.setEnabled(true);
                                                         buttonLive.setText("START");
+                                                        isRestart = true;  // Set flag when service is stopped
                                                     } else {
                                                         Toast.makeText(this, "Incorrect password.", Toast.LENGTH_SHORT).show();
                                                     }

@@ -182,6 +182,12 @@ public class LockService extends Service {
         if (isServiceStopping) {
             return;
         }
+
+        // check if unlock time is set
+        if (timeUnlockDevice == null) {
+            TOTAL_DURATION = Long.MAX_VALUE;
+        }
+
         // Start a CountDownTimer for the total duration
         if (TOTAL_DURATION > 0) {
             countDownTimer = new CountDownTimer(TOTAL_DURATION, LOCK_DURATION) {

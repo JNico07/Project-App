@@ -107,10 +107,10 @@ public class DetectorService extends Service implements LifecycleOwner{
     private ScheduledExecutorService executorService;
 
     // Adjusted constants for optimization
-    private static final int FRAME_SKIP_COUNT = 18; // Skip more frames to reduce CPU usage
+    private static final int FRAME_SKIP_COUNT = 150; // Skip more frames to reduce CPU usage
     private static final long MIN_ANALYSIS_INTERVAL = 3000; // # seconds between analyses
-    private static final int TARGET_ANALYSIS_WIDTH = 640; // Smaller resolution
-    private static final int TARGET_ANALYSIS_HEIGHT = 640;
+    private static final int TARGET_ANALYSIS_WIDTH = 416; // Smaller resolution
+    private static final int TARGET_ANALYSIS_HEIGHT = 416;
 
     private int frameCounter = 0;
     private long lastFpsTimestamp = 0;
@@ -246,8 +246,12 @@ public class DetectorService extends Service implements LifecycleOwner{
                 case "KILL_SERVICE":
                     stopSelf();
                     break;
+                case "START_TIMER":
+                    setupCameraX();
+                    break;
                 case "STOP_TIMER":
                     stopTimer();
+                    break;
                 case "STOP_CAMERA":
                     stopCameraX();
                     pauseTimer();
@@ -383,10 +387,10 @@ public class DetectorService extends Service implements LifecycleOwner{
 //                            }
 
                             // Increase frame skipping and minimum time between analyses
-                            if (frameCounter % FRAME_SKIP_COUNT != 0) {
-                                image.close();
-                                return;
-                            }
+//                            if (frameCounter % FRAME_SKIP_COUNT != 0) {
+//                                image.close();
+//                                return;
+//                            }
 
                             if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < MIN_ANALYSIS_INTERVAL) {
                                 image.close();
