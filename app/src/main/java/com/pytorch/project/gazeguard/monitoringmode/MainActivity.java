@@ -31,7 +31,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -85,6 +87,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
     private Button buttonLive;
     private ProgressBar buttonProgressBar;
     private boolean isRestart = false;
+    private View loadingContainer;
 
 
     public static String assetFilePath(Context context, String assetName) throws IOException {
@@ -131,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
         buttonLive = findViewById(R.id.startButton);
         buttonProgressBar = findViewById(R.id.buttonProgressBar);
+        loadingContainer = findViewById(R.id.loadingContainer);
         
         buttonLive.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -138,20 +142,6 @@ public class MainActivity extends AppCompatActivity implements Runnable {
                     ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.CAMERA}, 1);
                 } else {
                     startDetectorService();
-
-                    // Show loading state
-                    buttonLive.setVisibility(View.INVISIBLE);
-                    buttonProgressBar.setVisibility(View.VISIBLE);
-                    
-                    // Use different delay based on whether it's a restart
-                    int delayDuration = isRestart ? 20000 : 5000;
-                    
-                    // Delay for specified duration
-                    new Handler().postDelayed(() -> {
-                        buttonProgressBar.setVisibility(View.GONE);
-                        buttonLive.setVisibility(View.VISIBLE);
-                        isRestart = false;  // Reset the flag after use
-                    }, delayDuration);
                 }
             }
         });
@@ -357,6 +347,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             buttonLive.setEnabled(false);
             buttonLive.setText("Measuring Screen Time...");
 
+            loadingScreen();
+
             Toast.makeText(getApplicationContext(), "Measuring Screen Time...", Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(MainActivity.this, "You need to enable device admin..!", Toast.LENGTH_SHORT).show();
@@ -414,5 +406,21 @@ public class MainActivity extends AppCompatActivity implements Runnable {
 
             lockStatusRef.setValue(false);
         }
+    }
+
+    private void loadingScreen() {
+        // Show loading state
+        buttonLive.setVisibility(View.INVISIBLE);
+        loadingContainer.setVisibility(View.VISIBLE);
+
+        // Use different delay based on whether it's a restart
+        int delayDuration = isRestart ? 30000 : 5000;
+
+        // Delay for specified duration
+        new Handler().postDelayed(() -> {
+            loadingContainer.setVisibility(View.GONE);
+            buttonLive.setVisibility(View.VISIBLE);
+            isRestart = false;  // Reset the flag after use
+        }, delayDuration);
     }
 }

@@ -272,7 +272,7 @@ public class SetLimitAdapter extends FirebaseRecyclerAdapter<ParentModel, SetLim
                 .setSmallIcon(R.drawable.notification_important)
                 .setContentTitle("Device Locked")
                 .setContentText(userName + " reach Screen Time Limit, device has been locked")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setAutoCancel(true);
 
         // Show the notification

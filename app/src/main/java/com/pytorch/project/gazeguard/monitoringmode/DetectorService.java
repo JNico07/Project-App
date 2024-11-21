@@ -107,10 +107,10 @@ public class DetectorService extends Service implements LifecycleOwner{
     private ScheduledExecutorService executorService;
 
     // Adjusted constants for optimization
-    private static final int FRAME_SKIP_COUNT = 150; // Skip more frames to reduce CPU usage
-    private static final long MIN_ANALYSIS_INTERVAL = 3000; // # seconds between analyses
-    private static final int TARGET_ANALYSIS_WIDTH = 416; // Smaller resolution
-    private static final int TARGET_ANALYSIS_HEIGHT = 416;
+    private static final int FRAME_SKIP_COUNT = 300; // Skip more frames to reduce CPU usage
+    private static final long MIN_ANALYSIS_INTERVAL = 4000; // # seconds between analyses
+    private static final int TARGET_ANALYSIS_WIDTH = 400; // Smaller resolution
+    private static final int TARGET_ANALYSIS_HEIGHT = 400;
 
     private int frameCounter = 0;
     private long lastFpsTimestamp = 0;
@@ -366,15 +366,25 @@ public class DetectorService extends Service implements LifecycleOwner{
                             .setResolutionSelector(new ResolutionSelector.Builder()
                                 .setResolutionStrategy(new ResolutionStrategy(
                                     new Size(TARGET_ANALYSIS_WIDTH, TARGET_ANALYSIS_HEIGHT),
-                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_HIGHER))
+                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER))
                                 .build())
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build();
 
                     imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), new ImageAnalysis.Analyzer() {
-                        private int frameCounter = 0;
+                        private long lastFrameTimestamp = 0;
+                        private static final long FRAME_INTERVAL = 500; // 1000ms/10fps = 100ms between frames
+                        
                         @Override
                         public void analyze(@NonNull ImageProxy image) {
+                            long currentTimestamp = System.currentTimeMillis();
+                            
+                            // Skip frames to maintain approximately 10 FPS
+                            if (currentTimestamp - lastFrameTimestamp < FRAME_INTERVAL) {
+                                image.close();
+                                return;
+                            }
+                            lastFrameTimestamp = currentTimestamp;
 
                             // Calculate FPS
 //                            frameCounter++;
@@ -386,12 +396,7 @@ public class DetectorService extends Service implements LifecycleOwner{
 //                                lastFpsTimestamp = currentTime;
 //                            }
 
-                            // Increase frame skipping and minimum time between analyses
-//                            if (frameCounter % FRAME_SKIP_COUNT != 0) {
-//                                image.close();
-//                                return;
-//                            }
-
+                            // Existing analysis code
                             if (SystemClock.elapsedRealtime() - mLastAnalysisResultTime < MIN_ANALYSIS_INTERVAL) {
                                 image.close();
                                 return;
@@ -420,9 +425,9 @@ public class DetectorService extends Service implements LifecycleOwner{
     private void stopCameraX() {
         try {
             ProcessCameraProvider.getInstance(this).get().unbindAll();
-            Log.d("CameraX", "CameraX stopped successfully.");
+//            Log.d("CameraX", "CameraX stopped successfully.");
         } catch (ExecutionException | InterruptedException e) {
-            Log.e("CameraX", "Error stopping CameraX", e);
+//            Log.e("CameraX", "Error stopping CameraX", e);
         }
     }
 

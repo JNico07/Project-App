@@ -38,7 +38,7 @@ import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
-    private static final long LOCK_DURATION = 20000; // Lock every #
+    private static final long LOCK_DURATION = 5000; // Lock every #
     private static long TOTAL_DURATION; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
@@ -48,7 +48,7 @@ public class LockService extends Service {
     private Context context;
     Intent controlDetectorServiceIntent;
 
-    private static final long DELAY = 3000;
+    private static final long DELAY = 1000;
 
     private String unlockTime;
     private DateTimeFormatter formatterTime;
