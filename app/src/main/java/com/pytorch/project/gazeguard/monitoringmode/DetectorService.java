@@ -5,8 +5,10 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -115,6 +117,8 @@ public class DetectorService extends Service implements LifecycleOwner{
     private int frameCounter = 0;
     private long lastFpsTimestamp = 0;
     private static final int FPS_CALC_INTERVAL = 1000; // Calculate FPS every second
+
+    private BroadcastReceiver screenOffReceiver;
 
     public DetectorService() {
     }
@@ -229,6 +233,9 @@ public class DetectorService extends Service implements LifecycleOwner{
         });
 
         updateLockStatus();
+
+        // Register screen off receiver
+        registerScreenOffReceiver();
     }
 
     //    private int retryCount = 0;
@@ -654,6 +661,30 @@ public class DetectorService extends Service implements LifecycleOwner{
         }
     }
 
+    private void registerScreenOffReceiver() {
+        screenOffReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                    // Stop camera and pause timer when screen is turned off
+                    stopCameraX();
+                    pauseTimer();
+                } else if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+                    // Resume camera and timer when screen is turned on
+                    setupCameraX();
+                    if (!isPause) {
+                        startTimer();
+                    }
+                }
+            }
+        };
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        registerReceiver(screenOffReceiver, filter);
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -711,5 +742,11 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         // Set the Lifecycle state to DESTROYED
         mLifecycleRegistry.setCurrentState(Lifecycle.State.DESTROYED);
+
+        // Unregister screen off receiver
+        if (screenOffReceiver != null) {
+            unregisterReceiver(screenOffReceiver);
+            screenOffReceiver = null;
+        }
     }
 }
