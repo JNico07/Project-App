@@ -6,13 +6,16 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.admin.DevicePolicyManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -38,7 +41,7 @@ import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
-    private static final long LOCK_DURATION = 5000; // Lock every #
+    private static final long LOCK_DURATION = 30000; // Lock every #
     private static long TOTAL_DURATION; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;
@@ -59,6 +62,8 @@ public class LockService extends Service {
     private DatabaseReference deviceUnlockTimeRef;
     private FirebaseAuth mAuth;
     private ValueEventListener unlockTimeListener;
+
+    private BroadcastReceiver screenOffReceiver;
 
     @Override
     public void onCreate() {
@@ -91,7 +96,7 @@ public class LockService extends Service {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (!isServiceStopping) {
+                if (!isServiceStopping && isScreenOn()) {
                     startLockingProcess();
                 }
             }
@@ -151,9 +156,34 @@ public class LockService extends Service {
             // Start listening for changes
             deviceUnlockTimeRef.addValueEventListener(unlockTimeListener);
         }
+        registerScreenOffReceiver();
+    }
+
+    private void registerScreenOffReceiver() {
+        screenOffReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (Intent.ACTION_SCREEN_ON.equals(intent.getAction())) {
+                    startLockingProcess();
+                    startService(controlDetectorServiceIntent);
+                } else if (Intent.ACTION_SCREEN_OFF.equals(intent.getAction())) {
+                    if (handler != null) {
+                        handler.removeCallbacksAndMessages(null);
+                    }
+                }
+            }
+        };
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_SCREEN_OFF);
+        filter.addAction(Intent.ACTION_SCREEN_ON);
+        registerReceiver(screenOffReceiver, filter);
     }
 
     private void startLockingProcess() {
+        if (!isScreenOn()) {
+            return;
+        }
+
         currentLocalTime = parseCurrentLocalTime();
 
         Log.d("LockService", "Current Time: " + currentLocalTime);
@@ -163,11 +193,13 @@ public class LockService extends Service {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                lockDevice();
-                Log.d("LockService", "Device locked");
-                handler.postDelayed(this, 10000);
+                if (isScreenOn()) {
+                    lockDevice();
+                    Log.d("LockService", "Device locked");
+                    handler.postDelayed(this, LOCK_DURATION);
+                }
             }
-        }, 10000); // Initial delay
+        }, LOCK_DURATION);
     }
     private LocalTime parseCurrentLocalTime() {
         try {
@@ -176,6 +208,10 @@ public class LockService extends Service {
             Log.e("LockService", "Failed to parse current time", e);
             return LocalTime.now(); // Set default value or handle the error
         }
+    }
+
+    private boolean isScreenOn() {
+        return ((PowerManager) getSystemService(Context.POWER_SERVICE)).isInteractive();
     }
 
     private void lockDevice() {
@@ -198,20 +234,25 @@ public class LockService extends Service {
                         cancel();
                         return;
                     }
-                    // Lock the device
-                    if (devicePolicyManager.isAdminActive(componentName)) {
-                        devicePolicyManager.lockNow();
-                        updateLockStatus(true);
 
-                        // Stop camera service
-                        controlDetectorServiceIntent.setAction("STOP_CAMERA");
-                        startService(controlDetectorServiceIntent);
+//                    Log.d("LockService", "Screen is on: " + isScreenOn());
+                    // Only lock if screen is on
+                    if (isScreenOn()) {
+                        // Lock the device
+                        if (devicePolicyManager.isAdminActive(componentName)) {
+                            devicePolicyManager.lockNow();
+                            updateLockStatus(true);
 
-                        Toast.makeText(LockService.this, "LockService running", Toast.LENGTH_SHORT).show();
-                        Log.d("LockService", "Device locked successfully");
-                    } else {
-                        Log.w("LockService", "Device admin is not active");
-                        Toast.makeText(LockService.this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
+                            // Stop camera service
+                            controlDetectorServiceIntent.setAction("STOP_CAMERA");
+                            startService(controlDetectorServiceIntent);
+
+                            Toast.makeText(LockService.this, "LockService running", Toast.LENGTH_SHORT).show();
+                            Log.d("LockService", "Device locked successfully");
+                        } else {
+                            Log.w("LockService", "Device admin is not active");
+                            Toast.makeText(LockService.this, "Device admin permissions not granted", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }
 
@@ -260,9 +301,9 @@ public class LockService extends Service {
                     currentLocalTime = LocalTime.now(); // Fallback to now if parsing fails
                 }
 
-                handler.postDelayed(this, 30000);
+                handler.postDelayed(this, LOCK_DURATION);
             }
-        }, 30000);
+        }, LOCK_DURATION);
     }
     private String getCurrentLocalTime() {
         LocalDateTime now = LocalDateTime.now();
@@ -393,14 +434,14 @@ public class LockService extends Service {
         if (mAuth.getCurrentUser() != null) {
             String uid = mAuth.getCurrentUser().getUid();
             String childNumber = SharedPrefsUtil.getChildNumber(this);
-            
+
             DatabaseReference lockStatusRef = FirebaseDatabase.getInstance().getReference()
                     .child("Registered Users")
                     .child(uid)
                     .child("Child")
                     .child(childNumber)
                     .child("isDeviceLocked");
-                    
+
             lockStatusRef.setValue(isLocked);
         }
     }
