@@ -25,6 +25,7 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -60,6 +61,8 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import android.app.AppOpsManager;
 
 public class MainActivity extends AppCompatActivity implements Runnable {
     private int mImageIndex = 0;
@@ -213,6 +216,8 @@ public class MainActivity extends AppCompatActivity implements Runnable {
         }
 
         updateLockStatus();
+
+        requestUsageStatsPermission();
     }
 
 
@@ -420,5 +425,27 @@ public class MainActivity extends AppCompatActivity implements Runnable {
             buttonLive.setVisibility(View.VISIBLE);
             isRestart = false;  // Reset the flag after use
         }, delayDuration);
+    }
+
+    private void requestUsageStatsPermission() {
+        if (!checkUsageStatsPermission()) {
+            new MaterialAlertDialogBuilder(this)
+                .setTitle("Permission Required")
+                .setMessage("This app needs usage stats permission to track app usage. Please grant the permission in Settings.")
+                .setCancelable(false)
+                .setPositiveButton("Settings", (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS);
+                    startActivity(intent);
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+        }
+    }
+
+    private boolean checkUsageStatsPermission() {
+        AppOpsManager appOps = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
+        int mode = appOps.checkOpNoThrow(AppOpsManager.OPSTR_GET_USAGE_STATS,
+                android.os.Process.myUid(), getPackageName());
+        return mode == AppOpsManager.MODE_ALLOWED;
     }
 }

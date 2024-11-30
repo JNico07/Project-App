@@ -2,6 +2,8 @@ package com.pytorch.project.gazeguard.parentdashboard.childdatafragment;
 
 import static com.pytorch.project.gazeguard.common.RecommendationsManager.showRecommendationsDialog;
 
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -36,6 +38,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.pytorch.project.gazeguard.common.FirebaseManager;
 
 public class ChildDataFragment extends Fragment {
 
@@ -117,7 +123,7 @@ public class ChildDataFragment extends Fragment {
 
     // Update recordsContainer based on the selected year
     private void updateRecordsContainerForYear(LinearLayout recordsContainer, LineChart screenTimeChart, String year) {
-        recordsContainer.removeAllViews(); // Clear previous records
+        recordsContainer.removeAllViews();
 
         List<Entry> entries = new ArrayList<>();
         List<String> dates = new ArrayList<>();
@@ -125,57 +131,130 @@ public class ChildDataFragment extends Fragment {
         SimpleDateFormat inputDateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         SimpleDateFormat outputDateFormat = new SimpleDateFormat("MMMM dd, yyyy", Locale.getDefault());
 
-        // Filter and group data by date for the selected year
-        Map<String, Float> aggregatedData = new HashMap<>();
-        for (Map<String, Object> record : childDataList) {
-            String date = (String) record.get("date");
-            if (year.equals("All") || (date != null && date.startsWith(year))) {
-                float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
-                aggregatedData.put(date, aggregatedData.getOrDefault(date, 0f) + screenTime);
-            }
-        }
+        // Get Firestore instance
+        FirebaseFirestore firestore = FirebaseManager.getFirestore();
+        String uid = FirebaseManager.getCurrentUser().getUid();
+        String childName = getArguments().getString(ARG_CHILD_NAME);
 
-        // Sort the aggregated data by date in descending order
-        List<Map.Entry<String, Float>> sortedAggregatedData = new ArrayList<>(aggregatedData.entrySet());
-        sortedAggregatedData.sort((entry1, entry2) -> {
-            try {
-                Date date1 = inputDateFormat.parse(entry1.getKey());
-                Date date2 = inputDateFormat.parse(entry2.getKey());
-                return date2.compareTo(date1); // Descending order
-            } catch (Exception e) {
-                Log.d("ChildDataFragment", "Error parsing date: " + e.getMessage());
-                return 0;
-            }
-        });
+        // Fetch app usage data
+        firestore.collection("AppUsageRecords")
+                .document(uid)
+                .collection(childName)
+                .get()
+                .addOnSuccessListener(queryDocumentSnapshots -> {
+                    // Modified: Use nested map to store aggregated app usage by date
+                    Map<String, Map<String, Long>> aggregatedAppUsageByDate = new HashMap<>();
 
-        // Populate recordsContainer with aggregated data
-        int index = 0;
-        for (Map.Entry<String, Float> entry : sortedAggregatedData) {
-            String date = entry.getKey();
-            float totalScreenTime = entry.getValue();
+                    // Process and aggregate app usage records
+                    for (DocumentSnapshot document : queryDocumentSnapshots) {
+                        Date timestamp = document.getDate("timestamp");
+                        if (timestamp != null) {
+                            String date = inputDateFormat.format(timestamp);
+                            @SuppressWarnings("unchecked")
+                            Map<String, Long> appUsage = (Map<String, Long>) document.get("appUsage");
 
-            // Inflate and populate the record views
-            View recordView = LayoutInflater.from(getContext()).inflate(R.layout.record_item, recordsContainer, false);
-            TextView dateTextView = recordView.findViewById(R.id.dateTextView);
-            TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
+                            if (appUsage != null) {
+                                // Get or create map for this date
+                                Map<String, Long> dateAppUsage = aggregatedAppUsageByDate
+                                    .computeIfAbsent(date, k -> new HashMap<>());
 
-            try {
-                Date parsedDate = inputDateFormat.parse(date);
-                String formattedDate = outputDateFormat.format(parsedDate);
-                dateTextView.setText(formattedDate);
-            } catch (Exception e) {
-                Log.d("ChildDataFragment", "Error formatting date: " + e.getMessage());
-                dateTextView.setText(date); // Fallback to original date if parsing fails
-            }
+                                // Aggregate app usage times
+                                for (Map.Entry<String, Long> app : appUsage.entrySet()) {
+                                    String appName = app.getKey();
+                                    Long usageTime = app.getValue();
+                                    dateAppUsage.merge(appName, usageTime, Long::sum);
+                                }
+                            }
+                        }
+                    }
 
-            screenTimeTextView.setText(formatScreenTime(totalScreenTime));
-            recordsContainer.addView(recordView);
+                    // Continue with existing screen time processing
+                    Map<String, Float> aggregatedData = new HashMap<>();
+                    for (Map<String, Object> record : childDataList) {
+                        String date = (String) record.get("date");
+                        if (year.equals("All") || (date != null && date.startsWith(year))) {
+                            float screenTime = Float.parseFloat(String.valueOf(record.get("screenTime")));
+                            aggregatedData.put(date, aggregatedData.getOrDefault(date, 0f) + screenTime);
+                        }
+                    }
 
-            // Add data entries (index, totalScreenTime) for chart
-            entries.add(new Entry(index++, totalScreenTime));
-            dates.add(date);
-        }
+                    // Sort and display records
+                    List<Map.Entry<String, Float>> sortedAggregatedData = new ArrayList<>(aggregatedData.entrySet());
+                    sortedAggregatedData.sort((entry1, entry2) -> {
+                        try {
+                            Date date1 = inputDateFormat.parse(entry1.getKey());
+                            Date date2 = inputDateFormat.parse(entry2.getKey());
+                            return date2.compareTo(date1);
+                        } catch (Exception e) {
+                            return 0;
+                        }
+                    });
 
+                    int index = 0;
+                    for (Map.Entry<String, Float> entry : sortedAggregatedData) {
+                        String date = entry.getKey();
+                        float totalScreenTime = entry.getValue();
+
+                        View recordView = LayoutInflater.from(getContext()).inflate(R.layout.record_item, recordsContainer, false);
+                        TextView dateTextView = recordView.findViewById(R.id.dateTextView);
+                        TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
+                        LinearLayout appUsageContainer = recordView.findViewById(R.id.appUsageContainer);
+                        LinearLayout mainContainer = recordView.findViewById(R.id.mainContainer);
+
+                        // Hide app usage container by default
+                        appUsageContainer.setVisibility(View.GONE);
+
+                        try {
+                            Date parsedDate = inputDateFormat.parse(date);
+                            String formattedDate = outputDateFormat.format(parsedDate);
+                            dateTextView.setText(formattedDate);
+                        } catch (Exception e) {
+                            dateTextView.setText(date);
+                        }
+
+                        screenTimeTextView.setText(formatScreenTime(totalScreenTime));
+
+                        // Add click listener to the main container
+                        mainContainer.setOnClickListener(v -> {
+                            // Toggle visibility with animation
+                            if (appUsageContainer.getVisibility() == View.VISIBLE) {
+                                appUsageContainer.setVisibility(View.GONE);
+                            } else {
+                                appUsageContainer.setVisibility(View.VISIBLE);
+                            }
+                        });
+
+                        // Add aggregated app usage details if available
+                        Map<String, Long> dateAppUsage = aggregatedAppUsageByDate.get(date);
+                        if (dateAppUsage != null && !dateAppUsage.isEmpty()) {
+                            // Sort apps by usage time (descending)
+                            List<Map.Entry<String, Long>> sortedApps = new ArrayList<>(dateAppUsage.entrySet());
+                            sortedApps.sort((app1, app2) -> app2.getValue().compareTo(app1.getValue()));
+
+                            for (Map.Entry<String, Long> appEntry : sortedApps) {
+                                String appName = getAppNameFromPackage(appEntry.getKey()); // Convert package name to app name
+                                TextView appUsageView = new TextView(getContext());
+                                appUsageView.setText(String.format("%s: %s",
+                                        appName,
+                                        formatScreenTime(appEntry.getValue())));
+                                appUsageView.setTextSize(14);
+                                appUsageView.setPadding(40, 5, 20, 5);
+                                appUsageContainer.addView(appUsageView);
+                            }
+                        }
+
+                        recordsContainer.addView(recordView);
+
+                        entries.add(new Entry(index++, totalScreenTime));
+                        dates.add(date);
+                    }
+
+                    // Update chart
+                    updateChart(screenTimeChart, entries, dates);
+                });
+    }
+
+    private void updateChart(LineChart screenTimeChart, List<Entry> entries, List<String> dates) {
         // Update the chart data
         LineDataSet dataSet = new LineDataSet(entries, "Total Screen Time");
         dataSet.setColor(ColorTemplate.COLORFUL_COLORS[0]);
@@ -201,8 +280,6 @@ public class ChildDataFragment extends Fragment {
         screenTimeChart.invalidate(); // Refresh the chart
     }
 
-
-
     private String formatScreenTime(float screenTimeInSeconds) {
         int hours = (int) (screenTimeInSeconds / 3600);
         int minutes = (int) ((screenTimeInSeconds % 3600) / 60);
@@ -216,4 +293,74 @@ public class ChildDataFragment extends Fragment {
             return String.format("%d hours", hours);
         }
     }
+
+    private String getAppNameFromPackage(String packageName) {
+        // Common app package mappings
+        Map<String, String> commonApps = new HashMap<String, String>() {{
+            // Social Media
+            put("com.whatsapp", "WhatsApp");
+            put("com.facebook.katana", "Facebook");
+            put("com.instagram.android", "Instagram");
+            put("com.twitter.android", "Twitter");
+            put("com.snapchat.android", "Snapchat");
+            put("com.linkedin.android", "LinkedIn");
+            put("com.ss.android.ugc.trill", "TikTok");
+
+            // Google Apps
+            put("com.google.android.youtube", "YouTube");
+            put("com.google.android.gm", "Gmail");
+            put("com.google.android.apps.maps", "Google Maps");
+            put("com.android.chrome", "Chrome");
+            put("com.google.android.apps.photos", "Google Photos");
+            put("com.google.android.calendar", "Google Calendar");
+            put("System launcher", "Home Screen");
+
+            // Messaging & Communication
+            put("com.facebook.messenger", "Messenger");
+            put("com.facebook.orca", "Messenger");
+            put("org.telegram.messenger", "Telegram");
+            put("com.viber.voip", "Viber");
+            put("com.skype.raider", "Skype");
+            put("com.mydito", "DITO");
+
+            // Entertainment
+            put("com.spotify.music", "Spotify");
+            put("com.netflix.mediaclient", "Netflix");
+            put("tv.twitch.android.app", "Twitch");
+
+            // Gaming
+            put("com.supercell.clashofclans", "Clash of Clans");
+            put("com.mojang.minecraftpe", "Minecraft");
+            put("com.kiloo.subwaysurf", "Subway Surfers");
+
+            // Productivity
+            put("com.microsoft.office.word", "Word");
+            put("com.microsoft.office.excel", "Excel");
+            put("com.microsoft.office.powerpoint", "PowerPoint");
+            put("com.microsoft.outlook", "Outlook");
+            put("com.google.android.apps.docs", "Google Docs");
+        }};
+
+        // Check if the package is in our common apps map
+        if (commonApps.containsKey(packageName)) {
+            return commonApps.get(packageName);
+        }
+
+        // Try to get from PackageManager first
+        try {
+            PackageManager packageManager = requireContext().getPackageManager();
+            ApplicationInfo appInfo = packageManager.getApplicationInfo(packageName, 0);
+            return packageManager.getApplicationLabel(appInfo).toString();
+        } catch (PackageManager.NameNotFoundException e) {
+            // If package not found, extract and format the last part of the package name
+            String[] parts = packageName.split("\\.");
+            if (parts.length > 0) {
+                String lastPart = parts[parts.length - 1];
+                // Capitalize first letter
+                return lastPart.substring(0, 1).toUpperCase() + lastPart.substring(1);
+            }
+            return packageName; // Fallback to full package name if splitting fails
+        }
+    }
+
 }

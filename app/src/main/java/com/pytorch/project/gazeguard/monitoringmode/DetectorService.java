@@ -5,11 +5,13 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.app.usage.UsageEvents;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -78,6 +80,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import android.app.usage.UsageStatsManager;
+
 
 public class DetectorService extends Service implements LifecycleOwner{
 
@@ -236,6 +240,8 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         // Register screen off receiver
         registerScreenOffReceiver();
+
+        initUsageTracking();
     }
 
     //    private int retryCount = 0;
@@ -349,6 +355,8 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         // Call eyeTimeTracker to check the eye status and update the timer accordingly
         eyeTimeTracker();
+
+        trackAppUsage();
 
         return new EyeTrackerActivity.AnalysisResult(results);
     }
@@ -632,11 +640,13 @@ public class DetectorService extends Service implements LifecycleOwner{
             pauseTimer();
             resetTimer();
 
+            saveAppUsageData();
+
             // Create and start LockService
             intentLockService = new Intent(context, LockService.class);
             startForegroundService(intentLockService);
         } else {
-//            Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
+            Log.d("Screen time limit", "Time Limit NOT yet Exceeds " + screenTimeLimitInSeconds + " seconds");
         }
     }
 
@@ -688,6 +698,9 @@ public class DetectorService extends Service implements LifecycleOwner{
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        saveAppUsageData();
+
         isDestroyed = true;
         Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
 
@@ -748,5 +761,71 @@ public class DetectorService extends Service implements LifecycleOwner{
             unregisterReceiver(screenOffReceiver);
             screenOffReceiver = null;
         }
+    }
+
+    private UsageStatsManager usageStatsManager;
+    private Map<String, Long> appUsageMap = new HashMap<>();
+    private long lastUsageCheck = 0;
+    private static final long USAGE_STATS_INTERVAL = 1000; // Check every second
+
+    private void initUsageTracking() {
+        usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
+        lastUsageCheck = System.currentTimeMillis();
+    }
+
+    private void trackAppUsage() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastUsageCheck < USAGE_STATS_INTERVAL) {
+            return; // Don't check too frequently
+        }
+
+        long startTime = lastUsageCheck;
+        lastUsageCheck = currentTime;
+
+        UsageEvents.Event currentEvent = new UsageEvents.Event();
+        UsageEvents usageEvents = usageStatsManager.queryEvents(startTime, currentTime);
+
+        String currentPackage = null;
+        while (usageEvents.hasNextEvent()) {
+            usageEvents.getNextEvent(currentEvent);
+            if (currentEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
+                currentPackage = currentEvent.getPackageName();
+                // Update usage time for the app
+                appUsageMap.put(currentPackage,
+                        appUsageMap.getOrDefault(currentPackage, 0L) + USAGE_STATS_INTERVAL);
+            }
+        }
+    }
+
+    private void saveAppUsageData() {
+        if (appUsageMap.isEmpty()) return;
+
+        String childUserName = SharedPrefsUtil.getUserName(context);
+
+        Map<String, Object> usageData = new HashMap<>();
+        usageData.put("timestamp", new Date());
+        usageData.put("childName", childUserName);
+
+        Map<String, Object> appDetails = new HashMap<>();
+        for (Map.Entry<String, Long> entry : appUsageMap.entrySet()) {
+            String packageName = entry.getKey();
+            try {
+                ApplicationInfo appInfo = getPackageManager().getApplicationInfo(packageName, 0);
+                String appName = getPackageManager().getApplicationLabel(appInfo).toString();
+                appDetails.put(appName, entry.getValue() / 1000); // Convert to seconds
+            } catch (PackageManager.NameNotFoundException e) {
+                appDetails.put(packageName, entry.getValue() / 1000);
+            }
+        }
+        usageData.put("appUsage", appDetails);
+
+        firestore.collection("AppUsageRecords")
+                .document(uid)
+                .collection(childUserName)
+                .document()
+                .set(usageData);
+
+        // Clear the map after saving
+        appUsageMap.clear();
     }
 }
