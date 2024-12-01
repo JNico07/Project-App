@@ -8,6 +8,9 @@ import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Spannable;
+import android.text.SpannableStringBuilder;
+import android.text.style.StyleSpan;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -128,6 +131,11 @@ public class ChildDataFragment extends Fragment {
                 updateRecordsContainerForYear(recordsContainer, screenTimeChart, "All");
             }
         }
+
+        // Add click listener for the screen time info icon
+        ImageView screenTimeInfoIcon = view.findViewById(R.id.screenTimeInfoIcon);
+        screenTimeInfoIcon.setColorFilter(getResources().getColor(R.color.app_theme));
+        screenTimeInfoIcon.setOnClickListener(v -> showTimeFormatInfo());
     }
 
     // Update recordsContainer based on the selected year
@@ -373,13 +381,17 @@ public class ChildDataFragment extends Fragment {
         int minutes = (int) ((screenTimeInSeconds % 3600) / 60);
         int seconds = (int) (screenTimeInSeconds % 60);
 
-        if (screenTimeInSeconds < 60) {
-            return String.format("%d seconds", seconds);
-        } else if (screenTimeInSeconds < 3600) {
-            return String.format("%d minutes", minutes);
-        } else {
-            return String.format("%d hours", hours);
+        StringBuilder formattedTime = new StringBuilder();
+        
+        if (hours > 0) {
+            formattedTime.append(hours).append("h ");
         }
+        if (minutes > 0 || hours > 0) {
+            formattedTime.append(minutes).append("m ");
+        }
+        formattedTime.append(seconds).append("s");
+
+        return formattedTime.toString();
     }
 
     private String getAppNameFromPackage(String packageName) {
@@ -465,13 +477,37 @@ public class ChildDataFragment extends Fragment {
         contentLayout.setOrientation(LinearLayout.VERTICAL);
         contentLayout.setPadding(20, 20, 20, 20);
 
+        // Create header layout with summary and info icon
+        LinearLayout headerLayout = new LinearLayout(requireContext());
+        headerLayout.setOrientation(LinearLayout.HORIZONTAL);
+        headerLayout.setGravity(Gravity.CENTER_VERTICAL);
+        
         // Add summary section
         TextView summaryText = new TextView(requireContext());
         summaryText.setText(String.format("Total Apps Used: %d", apps.size()));
         summaryText.setTextSize(16);
         summaryText.setTypeface(null, Typeface.BOLD);
-        summaryText.setPadding(0, 0, 0, 20);
-        contentLayout.addView(summaryText);
+        summaryText.setPadding(0, 0, 10, 0);
+        headerLayout.addView(summaryText);
+
+        // Add info icon
+        ImageView infoIcon = new ImageView(requireContext());
+        infoIcon.setImageResource(R.drawable.ic_info);
+        infoIcon.setColorFilter(getResources().getColor(R.color.app_theme));
+        int iconSize = (int) (summaryText.getTextSize() * 1.2); // Make icon slightly larger than text
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(iconSize, iconSize);
+        infoIcon.setLayoutParams(iconParams);
+        infoIcon.setOnClickListener(v -> showTimeFormatInfo());
+        headerLayout.addView(infoIcon);
+
+        contentLayout.addView(headerLayout);
+        
+        // Add padding below header
+        View headerPadding = new View(requireContext());
+        LinearLayout.LayoutParams paddingParams = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT, 20);
+        headerPadding.setLayoutParams(paddingParams);
+        contentLayout.addView(headerPadding);
 
         // Calculate total time for percentage
         long totalTime = 0;
@@ -488,7 +524,7 @@ public class ChildDataFragment extends Fragment {
             // Create main row container
             LinearLayout appRow = new LinearLayout(requireContext());
             appRow.setOrientation(LinearLayout.HORIZONTAL);
-            appRow.setPadding(10, 10, 10, 10);
+            appRow.setPadding(30, 20, 30, 10);
             appRow.setGravity(Gravity.CENTER_VERTICAL);
 
             // Left side: App name and progress bar
@@ -564,6 +600,57 @@ public class ChildDataFragment extends Fragment {
         dialog.show();
 
         // Style the dialog buttons
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setTextColor(getResources().getColor(R.color.app_theme));
+    }
+
+    private void showTimeFormatInfo() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("Time Format Guide");
+        
+        // Create the message with formatted text
+        SpannableStringBuilder message = new SpannableStringBuilder();
+        message.append("Time format explanation:\n\n");
+        
+        // Add h (hours)
+        message.append("h = ");
+        int hourStart = message.length();
+        message.append("hour/s");
+        message.setSpan(new StyleSpan(Typeface.BOLD), hourStart, message.length(), 
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        message.append("\n");
+        
+        // Add m (minutes)
+        message.append("m = ");
+        int minStart = message.length();
+        message.append("minute/s");
+        message.setSpan(new StyleSpan(Typeface.BOLD), minStart, message.length(), 
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        message.append("\n");
+        
+        // Add s (seconds)
+        message.append("s = ");
+        int secStart = message.length();
+        message.append("second/s");
+        message.setSpan(new StyleSpan(Typeface.BOLD), secStart, message.length(), 
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        message.append("\n\n");
+        
+        // Add example
+        message.append("Example: ");
+        message.append("1h 32m 45s = ");
+        int exampleStart = message.length();
+        message.append("1 hour 32 minutes 45 seconds");
+        message.setSpan(new StyleSpan(Typeface.BOLD), exampleStart, message.length(), 
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+        builder.setMessage(message);
+        builder.setPositiveButton("Got it", null);
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
+        
+        // Style the dialog button
         Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
         positiveButton.setTextColor(getResources().getColor(R.color.app_theme));
     }
