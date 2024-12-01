@@ -124,6 +124,10 @@ public class DetectorService extends Service implements LifecycleOwner{
 
     private BroadcastReceiver screenOffReceiver;
 
+    private Map<String, Long> appUsageMap = new HashMap<>();
+    private String currentForegroundApp = null;
+    private long lastAppTrackTime = 0;
+
     public DetectorService() {
     }
 
@@ -521,21 +525,27 @@ public class DetectorService extends Service implements LifecycleOwner{
 
 
     private void eyeTimeTracker() {
-//        Log.d("eyeTracker", "Detected class: " + detectedClassName + " : " + isLooking());
-
         if (isLooking() && !isRunning) {
             startTimer();
             isRunning = true;
+            // Start tracking app usage when user starts looking
+            lastAppTrackTime = System.currentTimeMillis();
         }
         else if (!isLooking() && isRunning){
             pauseTimer();
             isRunning = false;
+            // Update app usage when user stops looking
+            trackAppUsage();
+        }
+
+        if (isRunning) {
+            // Regular updates while user is looking
+            trackAppUsage();
         }
 
         if (screenTimeLimitInSeconds > 0) {
             checkScreenTimeLimit();
         }
-
     }
 
     private boolean isLooking() {
@@ -764,57 +774,78 @@ public class DetectorService extends Service implements LifecycleOwner{
     }
 
     private UsageStatsManager usageStatsManager;
-    private Map<String, Long> appUsageMap = new HashMap<>();
-    private long lastUsageCheck = 0;
-    private static final long USAGE_STATS_INTERVAL = 1000; // Check every second
 
     private void initUsageTracking() {
         usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
-        lastUsageCheck = System.currentTimeMillis();
+        lastAppTrackTime = System.currentTimeMillis();
     }
 
     private void trackAppUsage() {
-        long currentTime = System.currentTimeMillis();
-        if (currentTime - lastUsageCheck < USAGE_STATS_INTERVAL) {
-            return; // Don't check too frequently
+        if (!isRunning) {
+            return; // Only track when the user is actually looking at the screen
         }
 
-        long startTime = lastUsageCheck;
-        lastUsageCheck = currentTime;
-
+        long currentTime = System.currentTimeMillis();
         UsageEvents.Event currentEvent = new UsageEvents.Event();
-        UsageEvents usageEvents = usageStatsManager.queryEvents(startTime, currentTime);
+        UsageEvents usageEvents = usageStatsManager.queryEvents(lastAppTrackTime, currentTime);
 
-        String currentPackage = null;
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(currentEvent);
             if (currentEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                currentPackage = currentEvent.getPackageName();
-                // Update usage time for the app
-                appUsageMap.put(currentPackage,
-                        appUsageMap.getOrDefault(currentPackage, 0L) + USAGE_STATS_INTERVAL);
+                // If there was a previous app being tracked, update its time
+                if (currentForegroundApp != null && lastAppTrackTime > 0) {
+                    long timeSpent = currentEvent.getTimeStamp() - lastAppTrackTime;
+                    appUsageMap.put(currentForegroundApp, 
+                        appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+                }
+                
+                currentForegroundApp = currentEvent.getPackageName();
+                lastAppTrackTime = currentEvent.getTimeStamp();
             }
+        }
+
+        // Update time for current app
+        if (currentForegroundApp != null && lastAppTrackTime > 0) {
+            long timeSpent = currentTime - lastAppTrackTime;
+            appUsageMap.put(currentForegroundApp, 
+                appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+            lastAppTrackTime = currentTime;
         }
     }
 
     private void saveAppUsageData() {
         if (appUsageMap.isEmpty()) return;
 
-        String childUserName = SharedPrefsUtil.getUserName(context);
+        // Update final usage time for current app
+        if (currentForegroundApp != null && lastAppTrackTime > 0) {
+            long timeSpent = System.currentTimeMillis() - lastAppTrackTime;
+            appUsageMap.put(currentForegroundApp, 
+                appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+        }
 
+        String childUserName = SharedPrefsUtil.getUserName(context);
         Map<String, Object> usageData = new HashMap<>();
         usageData.put("timestamp", new Date());
         usageData.put("childName", childUserName);
+        usageData.put("totalScreenTime", timerSeconds);
 
         Map<String, Object> appDetails = new HashMap<>();
+        PackageManager pm = getPackageManager();
         for (Map.Entry<String, Long> entry : appUsageMap.entrySet()) {
             String packageName = entry.getKey();
             try {
-                ApplicationInfo appInfo = getPackageManager().getApplicationInfo(packageName, 0);
-                String appName = getPackageManager().getApplicationLabel(appInfo).toString();
-                appDetails.put(appName, entry.getValue() / 1000); // Convert to seconds
+                ApplicationInfo appInfo = pm.getApplicationInfo(packageName, 0);
+                String appName = pm.getApplicationLabel(appInfo).toString();
+                // Convert to seconds and store only if usage time is significant (e.g., > 1 second)
+                long seconds = entry.getValue() / 1000;
+                if (seconds > 0) {
+                    appDetails.put(appName, seconds);
+                }
             } catch (PackageManager.NameNotFoundException e) {
-                appDetails.put(packageName, entry.getValue() / 1000);
+                long seconds = entry.getValue() / 1000;
+                if (seconds > 0) {
+                    appDetails.put(packageName, seconds);
+                }
             }
         }
         usageData.put("appUsage", appDetails);
@@ -823,9 +854,12 @@ public class DetectorService extends Service implements LifecycleOwner{
                 .document(uid)
                 .collection(childUserName)
                 .document()
-                .set(usageData);
-
-        // Clear the map after saving
-        appUsageMap.clear();
+                .set(usageData)
+                .addOnSuccessListener(aVoid -> {
+                    // Clear tracking data after successful save
+                    appUsageMap.clear();
+                    currentForegroundApp = null;
+                    lastAppTrackTime = 0;
+                });
     }
 }

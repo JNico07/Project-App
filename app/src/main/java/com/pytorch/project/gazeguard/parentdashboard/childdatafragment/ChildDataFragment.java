@@ -339,6 +339,8 @@ public class ChildDataFragment extends Fragment {
             put("com.microsoft.office.powerpoint", "PowerPoint");
             put("com.microsoft.outlook", "Outlook");
             put("com.google.android.apps.docs", "Google Docs");
+
+            put("com.bybit.app", "Bybit");
         }};
 
         // Check if the package is in our common apps map
