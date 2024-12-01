@@ -5,13 +5,16 @@ import static com.pytorch.project.gazeguard.common.RecommendationsManager.showRe
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
@@ -20,6 +23,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -205,9 +209,12 @@ public class ChildDataFragment extends Fragment {
                         TextView screenTimeTextView = recordView.findViewById(R.id.screenTimeTextView);
                         LinearLayout appUsageContainer = recordView.findViewById(R.id.appUsageContainer);
                         LinearLayout mainContainer = recordView.findViewById(R.id.mainContainer);
+                        ImageView expandIndicator = recordView.findViewById(R.id.expandIndicator);
 
                         // Hide app usage container by default
                         appUsageContainer.setVisibility(View.GONE);
+                        expandIndicator.setImageResource(R.drawable.ic_expand_more);
+                        expandIndicator.setRotation(0);
 
                         try {
                             Date parsedDate = inputDateFormat.parse(date);
@@ -224,8 +231,12 @@ public class ChildDataFragment extends Fragment {
                             // Toggle visibility with animation
                             if (appUsageContainer.getVisibility() == View.VISIBLE) {
                                 appUsageContainer.setVisibility(View.GONE);
+                                // Animate the indicator
+                                expandIndicator.animate().rotation(0).setDuration(200).start();
                             } else {
                                 appUsageContainer.setVisibility(View.VISIBLE);
+                                // Animate the indicator
+                                expandIndicator.animate().rotation(180).setDuration(200).start();
                             }
                         });
 
@@ -286,20 +297,37 @@ public class ChildDataFragment extends Fragment {
 
                             // Add "Show More" button if there are more apps
                             if (sortedApps.size() > 5) {
+                                // Customize "Show More" button appearance and interaction
                                 Button showMoreButton = new Button(getContext());
-                                showMoreButton.setText("Show All Apps");
-                                showMoreButton.setTextSize(12);
-                                showMoreButton.setBackgroundResource(android.R.drawable.btn_default);
-                                showMoreButton.setPadding(20, 5, 20, 5);
-                                
+                                showMoreButton.setText("View All Apps");
+                                showMoreButton.setTextSize(14);
+                                showMoreButton.setAllCaps(false);
+                                showMoreButton.setBackgroundResource(R.drawable.rounded_button); // Use a custom drawable for the button
+                                showMoreButton.setTextColor(getResources().getColor(R.color.white));
+                                showMoreButton.setPadding(30, 20, 30, 20);
+
+                                // Set margins and center alignment
                                 LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                                         LinearLayout.LayoutParams.WRAP_CONTENT,
                                         LinearLayout.LayoutParams.WRAP_CONTENT);
-                                params.setMargins(40, 10, 20, 10);
+                                params.gravity = Gravity.CENTER_HORIZONTAL;
+                                params.setMargins(20, 20, 20, 20);
                                 showMoreButton.setLayoutParams(params);
-                                
-                                showMoreButton.setOnClickListener(v -> showAllAppsDialog(sortedApps));
+
+                                // Add ripple effect on touch (if not using background with ripple already)
+                                showMoreButton.setForeground(ResourcesCompat.getDrawable(getResources(), R.drawable.ripple_effect, null));
+
+                                // Set up a click listener with animation
+                                showMoreButton.setOnClickListener(v -> {
+                                    v.animate().scaleX(0.95f).scaleY(0.95f).setDuration(100).withEndAction(() -> {
+                                        v.animate().scaleX(1f).scaleY(1f).setDuration(100);
+                                        showAllAppsDialog(sortedApps);
+                                    }).start();
+                                });
+
+                                // Add to container
                                 appUsageContainer.addView(showMoreButton);
+
                             }
                         }
 
@@ -387,6 +415,8 @@ public class ChildDataFragment extends Fragment {
             put("com.spotify.music", "Spotify");
             put("com.netflix.mediaclient", "Netflix");
             put("tv.twitch.android.app", "Twitch");
+            put("com.valvesoftware.android.steam.community", "Steam");
+            put("com.lazada.android", "Lazada");
 
             // Gaming
             put("com.supercell.clashofclans", "Clash of Clans");
@@ -427,29 +457,115 @@ public class ChildDataFragment extends Fragment {
 
     private void showAllAppsDialog(List<Map.Entry<String, Long>> apps) {
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("All Apps Used");
+        builder.setTitle("App Usage Details");
 
         // Create ScrollView for the content
         ScrollView scrollView = new ScrollView(requireContext());
         LinearLayout contentLayout = new LinearLayout(requireContext());
         contentLayout.setOrientation(LinearLayout.VERTICAL);
-        contentLayout.setPadding(20, 10, 20, 10);
+        contentLayout.setPadding(20, 20, 20, 20);
 
-        // Add all apps to the dialog
-        for (Map.Entry<String, Long> appEntry : apps) {
-            TextView appView = new TextView(requireContext());
-            appView.setText(String.format("%s: %s",
-                    getAppNameFromPackage(appEntry.getKey()),
-                    formatScreenTime(appEntry.getValue())));
-            appView.setTextSize(14);
-            appView.setPadding(10, 5, 10, 5);
-            contentLayout.addView(appView);
+        // Add summary section
+        TextView summaryText = new TextView(requireContext());
+        summaryText.setText(String.format("Total Apps Used: %d", apps.size()));
+        summaryText.setTextSize(16);
+        summaryText.setTypeface(null, Typeface.BOLD);
+        summaryText.setPadding(0, 0, 0, 20);
+        contentLayout.addView(summaryText);
+
+        // Calculate total time for percentage
+        long totalTime = 0;
+        for (Map.Entry<String, Long> app : apps) {
+            totalTime += app.getValue();
+        }
+
+        // Sort apps by usage time
+        List<Map.Entry<String, Long>> sortedApps = new ArrayList<>(apps);
+        sortedApps.sort((a, b) -> b.getValue().compareTo(a.getValue()));
+
+        // Add each app's details
+        for (Map.Entry<String, Long> appEntry : sortedApps) {
+            // Create main row container
+            LinearLayout appRow = new LinearLayout(requireContext());
+            appRow.setOrientation(LinearLayout.HORIZONTAL);
+            appRow.setPadding(10, 10, 10, 10);
+            appRow.setGravity(Gravity.CENTER_VERTICAL);
+
+            // Left side: App name and progress bar
+            LinearLayout leftSection = new LinearLayout(requireContext());
+            leftSection.setOrientation(LinearLayout.VERTICAL);
+            leftSection.setLayoutParams(new LinearLayout.LayoutParams(
+                    0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+
+            // App name
+            TextView appNameView = new TextView(requireContext());
+            String appName = getAppNameFromPackage(appEntry.getKey());
+            appNameView.setText(appName);
+            appNameView.setTextSize(14);
+            appNameView.setTypeface(null, Typeface.BOLD);
+            leftSection.addView(appNameView);
+
+            // Progress bar
+            int percentage = (int) ((appEntry.getValue() * 100.0f) / totalTime);
+            ProgressBar progressBar = new ProgressBar(requireContext(), null, 
+                    android.R.attr.progressBarStyleHorizontal);
+            progressBar.setProgress(percentage);
+            progressBar.setProgressTintList(ColorStateList.valueOf(getResources().getColor(R.color.app_theme)));
+            LinearLayout.LayoutParams progressParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 8);
+            progressParams.topMargin = 5;
+            progressBar.setLayoutParams(progressParams);
+            leftSection.addView(progressBar);
+
+            appRow.addView(leftSection);
+
+            // Right side: Usage time and percentage
+            LinearLayout rightSection = new LinearLayout(requireContext());
+            rightSection.setOrientation(LinearLayout.VERTICAL);
+            rightSection.setGravity(Gravity.END);
+            LinearLayout.LayoutParams rightParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, 
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            rightParams.setMarginStart(20); // Increased margin for better spacing
+            rightSection.setLayoutParams(rightParams);
+
+            // Time used
+            TextView timeView = new TextView(requireContext());
+            timeView.setText(formatScreenTime(appEntry.getValue()));
+            timeView.setTextSize(13);
+            timeView.setGravity(Gravity.END);
+            rightSection.addView(timeView);
+
+            // Percentage
+            TextView percentageView = new TextView(requireContext());
+            percentageView.setText(String.format("%d%%", percentage));
+            percentageView.setTextSize(12);
+            percentageView.setTextColor(Color.GRAY);
+            percentageView.setGravity(Gravity.END);
+            rightSection.addView(percentageView);
+
+            appRow.addView(rightSection);
+
+            contentLayout.addView(appRow);
+
+            // Add separator
+            View separator = new View(requireContext());
+            separator.setBackgroundColor(Color.LTGRAY);
+            LinearLayout.LayoutParams separatorParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 1);
+            contentLayout.addView(separator);
         }
 
         scrollView.addView(contentLayout);
         builder.setView(scrollView);
         builder.setPositiveButton("Close", null);
-        builder.show();
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+        // Style the dialog buttons
+        Button positiveButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+        positiveButton.setTextColor(getResources().getColor(R.color.app_theme));
     }
 
 }
