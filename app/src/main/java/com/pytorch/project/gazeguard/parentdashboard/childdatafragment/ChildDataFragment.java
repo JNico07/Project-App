@@ -4,17 +4,22 @@ import static com.pytorch.project.gazeguard.common.RecommendationsManager.showRe
 
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import com.github.mikephil.charting.charts.LineChart;
@@ -224,22 +229,77 @@ public class ChildDataFragment extends Fragment {
                             }
                         });
 
-                        // Add aggregated app usage details if available
+                        // Modified app usage display section
                         Map<String, Long> dateAppUsage = aggregatedAppUsageByDate.get(date);
                         if (dateAppUsage != null && !dateAppUsage.isEmpty()) {
                             // Sort apps by usage time (descending)
                             List<Map.Entry<String, Long>> sortedApps = new ArrayList<>(dateAppUsage.entrySet());
                             sortedApps.sort((app1, app2) -> app2.getValue().compareTo(app1.getValue()));
 
-                            for (Map.Entry<String, Long> appEntry : sortedApps) {
-                                String appName = getAppNameFromPackage(appEntry.getKey()); // Convert package name to app name
-                                TextView appUsageView = new TextView(getContext());
-                                appUsageView.setText(String.format("%s: %s",
-                                        appName,
-                                        formatScreenTime(appEntry.getValue())));
-                                appUsageView.setTextSize(14);
-                                appUsageView.setPadding(40, 5, 20, 5);
-                                appUsageContainer.addView(appUsageView);
+                            // Add total apps used count
+                            TextView totalAppsView = new TextView(getContext());
+                            totalAppsView.setText(String.format("Apps used: %d", sortedApps.size()));
+                            totalAppsView.setTextSize(14);
+                            totalAppsView.setPadding(40, 10, 20, 10);
+                            totalAppsView.setTypeface(null, Typeface.BOLD);
+                            appUsageContainer.addView(totalAppsView);
+
+                            // Add top apps section
+                            for (int i = 0; i < Math.min(5, sortedApps.size()); i++) {
+                                Map.Entry<String, Long> appEntry = sortedApps.get(i);
+                                String appName = getAppNameFromPackage(appEntry.getKey());
+                                
+                                // Create app usage row layout
+                                LinearLayout appRow = new LinearLayout(getContext());
+                                appRow.setOrientation(LinearLayout.HORIZONTAL);
+                                appRow.setPadding(40, 5, 20, 5);
+                                
+                                // App name with progress
+                                LinearLayout appInfoLayout = new LinearLayout(getContext());
+                                appInfoLayout.setOrientation(LinearLayout.VERTICAL);
+                                appInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                                        0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+                                
+                                TextView appNameView = new TextView(getContext());
+                                appNameView.setText(appName);
+                                appNameView.setTextSize(14);
+                                
+                                ProgressBar progressBar = new ProgressBar(getContext(), null, 
+                                        android.R.attr.progressBarStyleHorizontal);
+                                int percentage = (int) ((appEntry.getValue() * 100.0f) / totalScreenTime);
+                                progressBar.setProgress(percentage);
+                                progressBar.setProgressTintList(ColorStateList.valueOf(getResources().getColor(R.color.app_theme)));
+                                
+                                appInfoLayout.addView(appNameView);
+                                appInfoLayout.addView(progressBar);
+                                
+                                // Usage time
+                                TextView usageTimeView = new TextView(getContext());
+                                usageTimeView.setText(formatScreenTime(appEntry.getValue()));
+                                usageTimeView.setTextSize(14);
+                                
+                                appRow.addView(appInfoLayout);
+                                appRow.addView(usageTimeView);
+                                
+                                appUsageContainer.addView(appRow);
+                            }
+
+                            // Add "Show More" button if there are more apps
+                            if (sortedApps.size() > 5) {
+                                Button showMoreButton = new Button(getContext());
+                                showMoreButton.setText("Show All Apps");
+                                showMoreButton.setTextSize(12);
+                                showMoreButton.setBackgroundResource(android.R.drawable.btn_default);
+                                showMoreButton.setPadding(20, 5, 20, 5);
+                                
+                                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                params.setMargins(40, 10, 20, 10);
+                                showMoreButton.setLayoutParams(params);
+                                
+                                showMoreButton.setOnClickListener(v -> showAllAppsDialog(sortedApps));
+                                appUsageContainer.addView(showMoreButton);
                             }
                         }
 
@@ -363,6 +423,33 @@ public class ChildDataFragment extends Fragment {
             }
             return packageName; // Fallback to full package name if splitting fails
         }
+    }
+
+    private void showAllAppsDialog(List<Map.Entry<String, Long>> apps) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        builder.setTitle("All Apps Used");
+
+        // Create ScrollView for the content
+        ScrollView scrollView = new ScrollView(requireContext());
+        LinearLayout contentLayout = new LinearLayout(requireContext());
+        contentLayout.setOrientation(LinearLayout.VERTICAL);
+        contentLayout.setPadding(20, 10, 20, 10);
+
+        // Add all apps to the dialog
+        for (Map.Entry<String, Long> appEntry : apps) {
+            TextView appView = new TextView(requireContext());
+            appView.setText(String.format("%s: %s",
+                    getAppNameFromPackage(appEntry.getKey()),
+                    formatScreenTime(appEntry.getValue())));
+            appView.setTextSize(14);
+            appView.setPadding(10, 5, 10, 5);
+            contentLayout.addView(appView);
+        }
+
+        scrollView.addView(contentLayout);
+        builder.setView(scrollView);
+        builder.setPositiveButton("Close", null);
+        builder.show();
     }
 
 }
