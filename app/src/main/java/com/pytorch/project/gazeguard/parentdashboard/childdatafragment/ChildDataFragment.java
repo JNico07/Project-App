@@ -50,6 +50,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -251,6 +252,11 @@ public class ChildDataFragment extends Fragment {
                         // Modified app usage display section
                         Map<String, Long> dateAppUsage = aggregatedAppUsageByDate.get(date);
                         if (dateAppUsage != null && !dateAppUsage.isEmpty()) {
+                            // Calculate total app usage time
+                            long totalAppUsageTime = dateAppUsage.values().stream()
+                                    .mapToLong(Long::longValue)
+                                    .sum();
+
                             // Sort apps by usage time (descending)
                             List<Map.Entry<String, Long>> sortedApps = new ArrayList<>(dateAppUsage.entrySet());
                             sortedApps.sort((app1, app2) -> app2.getValue().compareTo(app1.getValue()));
@@ -285,7 +291,8 @@ public class ChildDataFragment extends Fragment {
                                 
                                 ProgressBar progressBar = new ProgressBar(getContext(), null, 
                                         android.R.attr.progressBarStyleHorizontal);
-                                int percentage = (int) ((appEntry.getValue() * 100.0f) / totalScreenTime);
+                                // Calculate percentage based on total app usage time
+                                int percentage = (int) ((appEntry.getValue() * 100.0f) / totalAppUsageTime);
                                 progressBar.setProgress(percentage);
                                 progressBar.setProgressTintList(ColorStateList.valueOf(getResources().getColor(R.color.app_theme)));
                                 
@@ -405,6 +412,7 @@ public class ChildDataFragment extends Fragment {
             put("com.snapchat.android", "Snapchat");
             put("com.linkedin.android", "LinkedIn");
             put("com.ss.android.ugc.trill", "TikTok");
+            put("com.zhiliaoapp.musically.go", "TikTok");
 
             // Google Apps
             put("com.google.android.youtube", "YouTube");
@@ -429,6 +437,7 @@ public class ChildDataFragment extends Fragment {
             put("tv.twitch.android.app", "Twitch");
             put("com.valvesoftware.android.steam.community", "Steam");
             put("com.lazada.android", "Lazada");
+            put("com.nbaimd.gametime.nba2011", "NBA");
 
             // Gaming
             put("com.supercell.clashofclans", "Clash of Clans");
@@ -441,6 +450,7 @@ public class ChildDataFragment extends Fragment {
             put("com.microsoft.office.powerpoint", "PowerPoint");
             put("com.microsoft.outlook", "Outlook");
             put("com.google.android.apps.docs", "Google Docs");
+            put("com.github.android", "Github");
 
             put("com.bybit.app", "Bybit");
         }};
@@ -509,11 +519,10 @@ public class ChildDataFragment extends Fragment {
         headerPadding.setLayoutParams(paddingParams);
         contentLayout.addView(headerPadding);
 
-        // Calculate total time for percentage
-        long totalTime = 0;
-        for (Map.Entry<String, Long> app : apps) {
-            totalTime += app.getValue();
-        }
+        // Calculate total app usage time
+        long totalAppUsageTime = apps.stream()
+                .mapToLong(Map.Entry::getValue)
+                .sum();
 
         // Sort apps by usage time
         List<Map.Entry<String, Long>> sortedApps = new ArrayList<>(apps);
@@ -542,7 +551,7 @@ public class ChildDataFragment extends Fragment {
             leftSection.addView(appNameView);
 
             // Progress bar
-            int percentage = (int) ((appEntry.getValue() * 100.0f) / totalTime);
+            int percentage = (int) ((appEntry.getValue() * 100.0f) / totalAppUsageTime);
             ProgressBar progressBar = new ProgressBar(requireContext(), null, 
                     android.R.attr.progressBarStyleHorizontal);
             progressBar.setProgress(percentage);
@@ -610,7 +619,6 @@ public class ChildDataFragment extends Fragment {
         
         // Create the message with formatted text
         SpannableStringBuilder message = new SpannableStringBuilder();
-        message.append("Time format explanation:\n\n");
         
         // Add h (hours)
         message.append("h = ");

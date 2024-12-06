@@ -41,7 +41,7 @@ import com.pytorch.project.gazeguard.common.SharedPrefsUtil;
 public class LockService extends Service {
 
     private static final String CHANNEL_ID = "LockServiceChannel";
-    private static final long LOCK_DURATION = 30000; // Lock every #
+    private static final long LOCK_DURATION = 10000; // Lock every #
     private static long TOTAL_DURATION; // Run for # seconds
     private DevicePolicyManager devicePolicyManager;
     private ComponentName componentName;

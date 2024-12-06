@@ -528,20 +528,14 @@ public class DetectorService extends Service implements LifecycleOwner{
         if (isLooking() && !isRunning) {
             startTimer();
             isRunning = true;
-            // Start tracking app usage when user starts looking
-            lastAppTrackTime = System.currentTimeMillis();
         }
         else if (!isLooking() && isRunning){
             pauseTimer();
             isRunning = false;
-            // Update app usage when user stops looking
-            trackAppUsage();
         }
 
-        if (isRunning) {
-            // Regular updates while user is looking
-            trackAppUsage();
-        }
+        // Track app usage regardless of looking status
+        trackAppUsage();
 
         if (screenTimeLimitInSeconds > 0) {
             checkScreenTimeLimit();
@@ -709,8 +703,6 @@ public class DetectorService extends Service implements LifecycleOwner{
     public void onDestroy() {
         super.onDestroy();
 
-        saveAppUsageData();
-
         isDestroyed = true;
         Toast.makeText(context, "Stopping Service...", Toast.LENGTH_SHORT).show();
 
@@ -795,10 +787,10 @@ public class DetectorService extends Service implements LifecycleOwner{
                 // If there was a previous app being tracked, update its time
                 if (currentForegroundApp != null && lastAppTrackTime > 0) {
                     long timeSpent = currentEvent.getTimeStamp() - lastAppTrackTime;
-                    appUsageMap.put(currentForegroundApp, 
-                        appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+                    appUsageMap.put(currentForegroundApp,
+                            appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
                 }
-                
+
                 currentForegroundApp = currentEvent.getPackageName();
                 lastAppTrackTime = currentEvent.getTimeStamp();
             }
@@ -807,8 +799,8 @@ public class DetectorService extends Service implements LifecycleOwner{
         // Update time for current app
         if (currentForegroundApp != null && lastAppTrackTime > 0) {
             long timeSpent = currentTime - lastAppTrackTime;
-            appUsageMap.put(currentForegroundApp, 
-                appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+            appUsageMap.put(currentForegroundApp,
+                    appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
             lastAppTrackTime = currentTime;
         }
     }
