@@ -171,7 +171,8 @@ public class ChildDataFragment extends Fragment {
                             @SuppressWarnings("unchecked")
                             Map<String, Long> appUsage = (Map<String, Long>) document.get("appUsage");
 
-                            if (appUsage != null) {
+                            // Skip records with more than 25 apps
+                            if (appUsage != null && appUsage.size() <= 25) {
                                 // Get or create map for this date
                                 Map<String, Long> dateAppUsage = aggregatedAppUsageByDate
                                     .computeIfAbsent(date, k -> new HashMap<>());
