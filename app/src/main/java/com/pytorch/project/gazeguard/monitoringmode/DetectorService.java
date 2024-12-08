@@ -71,12 +71,15 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -328,10 +331,10 @@ public class DetectorService extends Service implements LifecycleOwner{
 
         // Directly scale to target size in one step
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(
-            bitmap,
-            PrePostProcessor.mInputWidth,
-            PrePostProcessor.mInputHeight,
-            false  // bilinear filtering instead of bicubic
+                bitmap,
+                PrePostProcessor.mInputWidth,
+                PrePostProcessor.mInputHeight,
+                false  // bilinear filtering instead of bicubic
         );
 
         // Recycle the original bitmap only after ensuring resizedBitmap is created
@@ -383,21 +386,21 @@ public class DetectorService extends Service implements LifecycleOwner{
 
                     final ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                             .setResolutionSelector(new ResolutionSelector.Builder()
-                                .setResolutionStrategy(new ResolutionStrategy(
-                                    new Size(TARGET_ANALYSIS_WIDTH, TARGET_ANALYSIS_HEIGHT),
-                                    ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER))
-                                .build())
+                                    .setResolutionStrategy(new ResolutionStrategy(
+                                            new Size(TARGET_ANALYSIS_WIDTH, TARGET_ANALYSIS_HEIGHT),
+                                            ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER))
+                                    .build())
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build();
 
                     imageAnalysis.setAnalyzer(Executors.newSingleThreadExecutor(), new ImageAnalysis.Analyzer() {
                         private long lastFrameTimestamp = 0;
                         private static final long FRAME_INTERVAL = 500; // 1000ms/10fps = 100ms between frames
-                        
+
                         @Override
                         public void analyze(@NonNull ImageProxy image) {
                             long currentTimestamp = System.currentTimeMillis();
-                            
+
                             // Skip frames to maintain approximately 10 FPS
                             if (currentTimestamp - lastFrameTimestamp < FRAME_INTERVAL) {
                                 image.close();
@@ -773,30 +776,58 @@ public class DetectorService extends Service implements LifecycleOwner{
     }
 
     private void trackAppUsage() {
-        if (!isRunning) {
-            return; // Only track when the user is actually looking at the screen
+        // Define a set of excluded package names (home screens and system UIs)
+        Set<String> excludedPackages = new HashSet<>(Arrays.asList(
+                "com.android.launcher",       // Default Android launcher
+                "com.google.android.googlequicksearchbox", // Pixel launcher / Google Assistant
+                "com.miui.home",              // MIUI home screen
+                "com.samsung.android.launcher", // Samsung launcher
+                "com.huawei.android.launcher", // Huawei launcher
+                "com.oppo.launcher",          // Oppo launcher
+                "com.vivo.launcher",          // Vivo launcher
+                "com.android.systemui"        // System UI
+        ));
+
+        if (!isLooking() || !isRunning) {
+            if (currentForegroundApp != null && lastAppTrackTime > 0) {
+                long currentTime = System.currentTimeMillis();
+                long timeSpent = currentTime - lastAppTrackTime;
+                appUsageMap.put(currentForegroundApp,
+                        appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+            }
+            lastAppTrackTime = 0;
+            return;
         }
 
         long currentTime = System.currentTimeMillis();
-        UsageEvents.Event currentEvent = new UsageEvents.Event();
+        if (lastAppTrackTime == 0) {
+            lastAppTrackTime = currentTime;
+            return;
+        }
+
         UsageEvents usageEvents = usageStatsManager.queryEvents(lastAppTrackTime, currentTime);
+        UsageEvents.Event currentEvent = new UsageEvents.Event();
 
         while (usageEvents.hasNextEvent()) {
             usageEvents.getNextEvent(currentEvent);
+            Log.d("AppUsageTracker", "Event: " + currentEvent.getPackageName() + ", Type: " + currentEvent.getEventType());
+
             if (currentEvent.getEventType() == UsageEvents.Event.MOVE_TO_FOREGROUND) {
-                // If there was a previous app being tracked, update its time
+                // Ignore excluded packages
+                if (excludedPackages.contains(currentEvent.getPackageName())) {
+                    continue;
+                }
+
                 if (currentForegroundApp != null && lastAppTrackTime > 0) {
                     long timeSpent = currentEvent.getTimeStamp() - lastAppTrackTime;
                     appUsageMap.put(currentForegroundApp,
                             appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
                 }
-
                 currentForegroundApp = currentEvent.getPackageName();
                 lastAppTrackTime = currentEvent.getTimeStamp();
             }
         }
 
-        // Update time for current app
         if (currentForegroundApp != null && lastAppTrackTime > 0) {
             long timeSpent = currentTime - lastAppTrackTime;
             appUsageMap.put(currentForegroundApp,
@@ -805,14 +836,15 @@ public class DetectorService extends Service implements LifecycleOwner{
         }
     }
 
+
     private void saveAppUsageData() {
         if (appUsageMap.isEmpty()) return;
 
         // Update final usage time for current app
         if (currentForegroundApp != null && lastAppTrackTime > 0) {
             long timeSpent = System.currentTimeMillis() - lastAppTrackTime;
-            appUsageMap.put(currentForegroundApp, 
-                appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
+            appUsageMap.put(currentForegroundApp,
+                    appUsageMap.getOrDefault(currentForegroundApp, 0L) + timeSpent);
         }
 
         String childUserName = SharedPrefsUtil.getUserName(context);
